@@ -1,4 +1,4 @@
-Initialization:
+Initialization (run one time):
 
 `bash init.sh`
 
