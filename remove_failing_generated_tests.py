@@ -15,7 +15,7 @@ testClasses = os.popen("find " + reportPath + '/target/surefire-reports/ -name "
 # testClasses = [testClass.replace("/txt", "") for testClass in testClasses]
 testClasses = os.popen("find " + reportPath + '/target/surefire-reports/ -name "TEST-*"').readlines()
 testClasses = [testClass.strip() for testClass in testClasses]
-print(testClasses)
+# print(testClasses)
 
 
 for testClass in testClasses:

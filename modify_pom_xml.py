@@ -28,8 +28,14 @@ root = doc.getroot()
 targetFolder = ET.Element("targetFolder")
 targetFolder.text = "evosuite-tests"
 
-for property in root.findall(namespace(root)+'properties'):
-    property.append(targetFolder)
+properties = root.findall(namespace(root)+'properties')
+if len(properties) > 0:
+    for property in root.findall(namespace(root)+'properties'):
+        property.append(targetFolder)
+else:
+    propertiesTag = ET.Element("properties")
+    propertiesTag.append(targetFolder)
+    root.append(propertiesTag)
 
 evosuiteStandAlone = ET.Element("dependency")
 evosuiteSAGroupId = ET.Element("groupId")
@@ -59,9 +65,16 @@ junitDependency.append(junitDependencyArtifactId)
 junitDependency.append(junitDependencyVersion)
 junitDependency.append(junitDependencyScope)
 
-for dependency in root.findall(namespace(root)+'dependencies'):
-    dependency.append(evosuiteStandAlone)
-    dependency.append(junitDependency)
+dependencies = root.findall(namespace(root)+'dependencies')
+if len(dependencies) > 0:
+    for dependency in root.findall(namespace(root)+'dependencies'):
+        dependency.append(evosuiteStandAlone)
+        dependency.append(junitDependency)
+else:
+    dependenciesTag = ET.Element("dependencies")
+    dependenciesTag.append(evosuiteStandAlone)
+    dependenciesTag.append(junitDependency)
+    root.append(dependenciesTag)
 
 evosuitePlugin = ET.Element("plugin")
 evosuitePluginGroupId = ET.Element("groupId")
@@ -138,11 +151,14 @@ codehausPlugin.append(codehausPluginArtifactId)
 codehausPlugin.append(codehausPluginVersion)
 codehausPlugin.append(codehausPluginExecutions)
 
-for build in root.findall(namespace(root)+'build'):
-    for plugin in build.findall(namespace(root)+'plugins'):
-        plugin.append(evosuitePlugin)
-        plugin.append(mavenPlugin)
-        plugin.append(codehausPlugin)
+
+builds = root.findall(namespace(root)+'build')
+if len(builds) > 0:
+    for build in root.findall(namespace(root)+'build'):
+        for plugin in build.findall(namespace(root)+'plugins'):
+            plugin.append(evosuitePlugin)
+            plugin.append(mavenPlugin)
+            plugin.append(codehausPlugin)
 
 out = ET.tostring(root)
 doc.write(path)
