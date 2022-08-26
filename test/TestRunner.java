@@ -2,6 +2,8 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.Request;
+
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,34 +17,31 @@ public class TestRunner {
       String testClasses = System.getProperty("classes");
       List<String> testClassesList = Arrays.asList(testClasses.split(","));
       Collections.shuffle(testClassesList); //shuffle test classes
-      System.out.println(testClassesList);
       int pass = 0;
       int fail = 0;
+
       for(String testClass : testClassesList){
-         // System.out.println(testClass);
          Class clazz = Class.forName(testClass);
          Method[] methods = clazz.getDeclaredMethods();
-         List<String> testMethodsList = new ArrayList<String>();
-
-         for (Method method : methods) {
-            testMethodsList.add(method.getName());
-         }
+         List<Method> testMethodsList = Arrays.asList(methods);
          Collections.shuffle(testMethodsList); //shuffle test cases
 
-         for (String testMethod : testMethodsList){
-            Request request = Request.method(clazz, testMethod);
-            // Request request = Request.method(method.getDeclaringClass(), testMethod);
+         for (Method testMethod : testMethodsList){
+            // need to check annotations (as of now EvoSuite does not have @Before/@After so it should be working fine)
+            // Annotation[] annotations = testMethod.getDeclaredAnnotations();
+            
+            Request request = Request.method(clazz, testMethod.getName());
             Result result = new JUnitCore().run(request);
          
             for (Failure failure : result.getFailures()) {
+               System.out.println("");
                System.out.println(failure.toString());
             }
             
             if(result.wasSuccessful() == true) {
                pass++;
                System.out.print(".");
-            }
-            else {
+            } else {
                fail++;
                System.out.print("E");
             }

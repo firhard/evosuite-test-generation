@@ -2,7 +2,6 @@ MY_PATH=$(dirname "$0")
 mvn clean
 mvn compile -Drat.skip=true
 
-javac $MY_PATH/test/TestRunner.java
 
 mkdir $(pwd)/evosuite-tests
 
@@ -11,7 +10,7 @@ mkdir $(pwd)/evosuite-tests
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/dependencies/evosuite-standalone-runtime-1.2.0.jar:$MY_PATH/dependencies/junit-4.12.jar:$MY_PATH/dependencies/hamcrest-core-1.3.jar:$MY_PATH/test
 
 echo $CLASSPATH
-
+javac $MY_PATH/test/TestRunner.java
 mvn dependency:copy-dependencies
 
 TESTS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.java)
@@ -21,6 +20,13 @@ for x in $TESTS; do
     JAVA_RESPONSE="$(javac $x 2>&1)";
     if [[ $JAVA_RESPONSE == *"error"* ]]; then
         rm $x
+        if [[ "$x" == *"_scaffolding.java"* ]]; then
+            xTest=${x//_scaffolding.java/.java}
+            rm $xTest
+        else
+            xTestScaffolding=${x//.java/_scaffolding.java}
+            rm $xTestScaffolding
+        fi
     fi
 done
 
