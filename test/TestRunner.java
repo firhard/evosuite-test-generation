@@ -25,6 +25,7 @@ public class TestRunner {
          Method[] methods = clazz.getDeclaredMethods();
          List<Method> testMethodsList = Arrays.asList(methods);
          Collections.shuffle(testMethodsList); //shuffle test cases
+         System.out.println(testMethodsList);
 
          for (Method testMethod : testMethodsList){
             // need to check annotations (as of now EvoSuite does not have @Before/@After so it should be working fine)
