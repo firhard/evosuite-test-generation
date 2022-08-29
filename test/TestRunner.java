@@ -17,6 +17,7 @@ public class TestRunner {
       String testClasses = System.getProperty("classes");
       List<String> testClassesList = Arrays.asList(testClasses.split(","));
       Collections.shuffle(testClassesList); //shuffle test classes
+      System.out.println(testClassesList);
       int pass = 0;
       int fail = 0;
 
