@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.Request;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,20 +26,44 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class MavenTestOrder {
-    public static final Path MVN_TEST_LOG = Paths.get("mvn-test.log");
     private final Path mvnTestLog;
     private final Path sureFireDirectory;
+    private final String testOrder;
 
     protected void run() throws Exception {
         final List<String> classOrder = getClassOrder(mvnTestLog.toFile());
         final List<Path> allResultsFolders = Files.walk(sureFireDirectory)
                 .filter(path -> path.toString().contains("TEST-"))
                 .collect(Collectors.toList());
-        for (final Path p : allResultsFolders) {
-            File f = p.toFile();
-            long time = f.lastModified();
-            System.out.println(p + " " + parseXML(f));
+        final String shuffleOrder = testOrder;
+        int pass = 0;
+        int fail = 0;
+
+        for (String clazz : classOrder){
+            for (final Path p : allResultsFolders) {
+                if (p.toString().contains(clazz)){
+                    File f = p.toFile();
+                    List<String> testMethods = parseXML(f);
+
+                    for (String testMethod : testMethods) {
+                        Request request = Request.method(Class.forName(clazz), testMethod);
+                        Result result = new JUnitCore().run(request);
+                        if(result.wasSuccessful() == true) {
+                            pass++;
+                            System.out.print(".");
+                        } else {
+                            fail++;
+                            System.out.print("E");
+                        }
+                    }
+                }
+            }
         }
+
+        System.out.println("");
+        System.out.println("Pass: " + pass + ", Fail: " + fail);
+        System.out.println("");
+        
     }
 
     private List<String> parseXML(File xmlFile) throws IOException, SAXException, ParserConfigurationException {
@@ -67,7 +95,8 @@ public class MavenTestOrder {
         try {
             String mvnLogPath = System.getProperty("mvnLogPath");
             String surefirePath = System.getProperty("surefirePath");
-            new MavenTestOrder(mvnLogPath, surefirePath).run();
+            String testOrder = System.getProperty("testOrder");
+            new MavenTestOrder(mvnLogPath, surefirePath, testOrder).run();
 
             System.exit(0);
         } catch (Exception e) {
@@ -77,9 +106,10 @@ public class MavenTestOrder {
         System.exit(1);
     }
 
-    private MavenTestOrder(String mvnLogPath, String surefirePath) {
+    private MavenTestOrder(String mvnLogPath, String surefirePath, String testOrder) {
         this.mvnTestLog = Paths.get(mvnLogPath);
         this.sureFireDirectory = Paths.get(surefirePath);
+        this.testOrder = testOrder;
     }
 
     private List<String> getClassOrder(File f) {

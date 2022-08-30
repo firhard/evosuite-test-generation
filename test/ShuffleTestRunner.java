@@ -22,7 +22,6 @@ public class ShuffleTestRunner {
       String testClasses = System.getProperty("classes");
       List<String> testClassesList = Arrays.asList(testClasses.split(","));
       Collections.shuffle(testClassesList); //shuffle test classes
-      System.out.println(testClassesList);
       int pass = 0;
       int fail = 0;
 
@@ -31,8 +30,6 @@ public class ShuffleTestRunner {
          Method[] methods = clazz.getDeclaredMethods();
          List<Method> testMethodsList = Arrays.asList(methods);
          Collections.shuffle(testMethodsList); //shuffle test cases
-         // System.out.println(testMethodsList);
-
          for (Method testMethod : testMethodsList){
             // need to check annotations (as of now EvoSuite does not have @Before/@After so it should be working fine)
             // Annotation[] annotations = testMethod.getDeclaredAnnotations();
@@ -56,5 +53,6 @@ public class ShuffleTestRunner {
       }
       System.out.println("");
       System.out.println("Pass: " + pass + ", Fail: " + fail);
+      System.out.println("");
    }
 }  	

@@ -56,5 +56,6 @@ public class TestRunner {
       }
       System.out.println("");
       System.out.println("Pass: " + pass + ", Fail: " + fail);
+      System.out.println("");
    }
 }  	

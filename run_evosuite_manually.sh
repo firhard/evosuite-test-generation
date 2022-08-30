@@ -17,8 +17,7 @@ javac $MY_PATH/test/MavenTestOrder.java
 mvn dependency:copy-dependencies
 
 TESTS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.java)
-
-echo "Compiling tests"
+echo "Compiling EvoSuite tests"
 for x in $TESTS; do
     JAVA_RESPONSE="$(javac $x 2>&1)";
     if [[ $JAVA_RESPONSE == *"error"* ]]; then
@@ -32,40 +31,28 @@ for x in $TESTS; do
         fi
     fi
 done
+echo "EvoSuite Tests Compiled"
 
 mvn test -l mvn-test.log
 
-java -DmvnLogPath=$(pwd)/mvn-test.log MavenTestOrder;
-# TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
-# TEST_CLASS=$(find $(pwd)/target/test-classes -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
-# # tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\/\//}
-# tclass=${TEST_CLASS//$(pwd)\/target\/test-classes\//}
-# tclass=${tclass//_scaffolding/}
-# tclass=${tclass//.class/}
-# tclass=${tclass//\//.}
-# echo $tclass
-# java org.junit.runner.JUnitCore ${tclass};
+echo "Run developer-written test in \`mvn test\` order"
+java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -Dshuffle=true MavenTestOrder;
 
-
+echo "Run EvoSuite tests"
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
-# TEST_CLASS=$(find $(pwd)/target/test-classes -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
 tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
-# tclass=${TEST_CLASS//$(pwd)\/target\/test-classes\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
-echo $tclass
 java org.junit.runner.JUnitCore ${tclass};
 
-echo "SHUFFLE ORDER"
+echo "Run EvoSuite tests in shuffle order"
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
 tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
-# for j in {1..10}; do 
-    java -Dclasses=${tclass} ShuffleTestRunner;
-# done
+java -Dclasses=${tclass} ShuffleTestRunner;
 
 # ignore this part for now
 # mvn test -Drat.skip=true
