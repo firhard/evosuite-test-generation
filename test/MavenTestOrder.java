@@ -13,6 +13,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.Request;
+import org.junit.runner.notification.RunListener;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,7 +39,19 @@ public class MavenTestOrder {
         final String shuffleOrder = testOrder;
         int pass = 0;
         int fail = 0;
-
+        JUnitCore junit = new JUnitCore();
+        
+        final RunListener listener = new RunListener();
+        junit.addListener(listener);
+        // junit.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
+        //     @Override
+        //     public void testStarted(Description description) throws Exception {
+        //         formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jackson-annotations","TEST-"+description.getDisplayName()+".xml")));
+        //         super.testStarted(description);
+        //     }
+        // });
+        
+        // junit.addListener(new MyJunitListener());
         for (String clazz : classOrder){
             for (final Path p : allResultsFolders) {
                 if (p.toString().contains(clazz)){
@@ -47,7 +60,8 @@ public class MavenTestOrder {
 
                     for (String testMethod : testMethods) {
                         Request request = Request.method(Class.forName(clazz), testMethod);
-                        Result result = new JUnitCore().run(request);
+                        Result result = junit.run(request);
+                        
                         if(result.wasSuccessful() == true) {
                             pass++;
                             System.out.print(".");
@@ -60,6 +74,7 @@ public class MavenTestOrder {
             }
         }
 
+        // System.out.println(listener);
         System.out.println("");
         System.out.println("Pass: " + pass + ", Fail: " + fail);
         System.out.println("");
