@@ -17,7 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 
-public class TestRunner {
+public class ShuffleTestRunner {
    public static void main(String[] args) throws Exception {
       String testClasses = System.getProperty("classes");
       List<String> testClassesList = Arrays.asList(testClasses.split(","));
