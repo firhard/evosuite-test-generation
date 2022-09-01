@@ -28,6 +28,17 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import org.junit.internal.TextListener;
+import org.apache.tools.ant.taskdefs.optional.junit.JUnitResultFormatter;
+import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
+import org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import org.junit.runner.Description;
+import java.io.FileOutputStream;
+import junit.framework.Test;
+import junit.framework.TestResult;
+
 public class MavenTestOrder {
     private final Path mvnTestLog;
     private final Path sureFireDirectory;
@@ -62,13 +73,20 @@ public class MavenTestOrder {
             Collections.shuffle(classOrder);
         }
         
-        final RunListener listener = new RunListener();
-        junit.addListener(listener);
+        // final RunListener listener = new RunListener();
+        // junit.addListener(new TextListener(System.out));
+        // HashMap<String, TestSet> classMethodCounts = new HashMap<>();
+        // ConcurrentRunListener reporter =
+        //     createInstance( classMethodCounts, reporterManagerFactory, parallelClasses, false );
+        // JUnitCoreRunListener runListener = new JUnitCoreRunListener( reporter, classMethodCounts );
+        // startCapture( runListener );
+        // junit.addListeners();
+        junit.addListener(new XMLListener());
         // junit.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
         //     @Override
-        //     public void testStarted(Description description) throws Exception {
-        //         formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jackson-annotations","TEST-"+description.getDisplayName()+".xml")));
-        //         super.testStarted(description);
+        //     public void testRunStarted(Description description) throws Exception {
+        //         formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jackson-annotations/test-reports","TEST-" + description.getDisplayName() + ".xml")));
+        //         super.testRunStarted(description);
         //     }
         // });
         
@@ -82,10 +100,11 @@ public class MavenTestOrder {
                     if (testOrder.equals("shuffle")){
                         Collections.shuffle(testMethods);
                     }
-                    String name = ManagementFactory.getRuntimeMXBean().getName();
-                    System.out.println(name.split("@")[0]);
+                    // String name = ManagementFactory.getRuntimeMXBean().getName();
+                    // System.out.println(name.split("@")[0]);
                     for (String testMethod : testMethods) {
                         Request request = Request.method(Class.forName(clazz), testMethod);
+                        // Request request = Request.method(Class.forName(clazz));
                         Result result = junit.run(request);
                         
                         if(result.wasSuccessful() == true) {
@@ -155,5 +174,127 @@ public class MavenTestOrder {
             e.printStackTrace();
         }
         return classNames;
+    }
+
+    public class XMLListener extends RunListener {
+        @Override
+        public void testRunStarted(Description description) throws Exception {
+            System.out.println("testRunStarted " + description);
+            // System.out.println(description.toString());
+        }
+
+        @Override
+        public void testStarted(Description description) throws Exception {
+            System.out.println("testStarted " + description.getDisplayName());
+            // System.out.println(description.toString());
+        }
+    }
+
+    public static class JUnitResultFormatterAsRunListener extends RunListener {
+        protected final JUnitResultFormatter formatter;
+        private ByteArrayOutputStream stdout,stderr;
+        private PrintStream oldStdout,oldStderr;
+        private int problem;
+        private long startTime;
+
+        private JUnitResultFormatterAsRunListener(JUnitResultFormatter formatter) {
+            this.formatter = formatter;
+        }
+
+        @Override
+        public void testRunStarted(Description description) throws Exception {
+            System.out.println("Start");
+            formatter.startTestSuite(new JUnitTest(description.getDisplayName()));
+            formatter.startTest(new DescriptionAsTest(description));
+            problem = 0;
+            startTime = System.currentTimeMillis();
+
+            this.oldStdout = System.out;
+            this.oldStderr = System.err;
+            System.setOut(new PrintStream(stdout = new ByteArrayOutputStream()));
+            System.setErr(new PrintStream(stderr = new ByteArrayOutputStream()));
+        }
+
+        @Override
+        public void testRunFinished(Result result) throws Exception {
+        }
+
+        @Override
+        public void testStarted(Description description) throws Exception {
+            
+        }
+
+        @Override
+        public void testFinished(Description description) throws Exception {
+            // System.out.flush();
+            // System.err.flush();
+            // System.setOut(oldStdout);
+            // System.setErr(oldStderr);
+
+            // formatter.setSystemOutput(stdout.toString());
+            // formatter.setSystemError(stderr.toString());
+            // formatter.endTest(new DescriptionAsTest(description));
+
+            // JUnitTest suite = new JUnitTest(description.getDisplayName());
+            // suite.setCounts(1,problem,0);
+            // suite.setRunTime(System.currentTimeMillis()-startTime);
+            // formatter.endTestSuite(suite);
+        }
+
+        @Override
+        public void testFailure(Failure failure) throws Exception {
+            testAssumptionFailure(failure);
+        }
+
+        @Override
+        public void testAssumptionFailure(Failure failure) {
+            problem++;
+            formatter.addError(new DescriptionAsTest(failure.getDescription()), failure.getException());
+        }
+
+        @Override
+        public void testIgnored(Description description) throws Exception {
+            super.testIgnored(description);
+        }
+    }
+
+    public static class DescriptionAsTest implements Test {
+        private final Description description;
+
+        public DescriptionAsTest(Description description) {
+            this.description = description;
+        }
+
+        public int countTestCases() {
+            return 1;
+        }
+
+        public void run(TestResult result) {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * {@link JUnitResultFormatter} determines the test name by reflection.
+         */
+        public String getName() {
+            return description.getDisplayName();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            DescriptionAsTest that = (DescriptionAsTest) o;
+
+            if (!description.equals(that.description)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return description.hashCode();
+        }
     }
 }

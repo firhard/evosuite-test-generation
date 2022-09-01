@@ -2,11 +2,13 @@ MY_PATH=$(dirname "$0")
 mvn clean
 mvn compile -Drat.skip=true
 
+rm -r $(pwd)/test-reports
 mkdir $(pwd)/evosuite-tests
+mkdir $(pwd)/test-reports
 
 # java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $(pwd)/target/classes -Dctg_cores=2 -Dctg_memory=1000  -Dctg_bests_folder=../evosuite-tests -continuous EXECUTE -Dctg_time_per_class=1
 
-export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/dependencies/evosuite-standalone-runtime-1.2.0.jar:$MY_PATH/dependencies/junit-4.12.jar:$MY_PATH/dependencies/hamcrest-core-1.3.jar:$MY_PATH/test:$(pwd)/target/test-classes
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/dependencies/evosuite-standalone-runtime-1.2.0.jar:$MY_PATH/dependencies/junit-4.12.jar:$MY_PATH/dependencies/hamcrest-core-1.3.jar:$MY_PATH/test:$(pwd)/target/test-classes:$MY_PATH/dependencies/ant-junit-1.10.12.jar:$MY_PATH/dependencies/ant-launcher-1.10.12.jar:$MY_PATH/dependencies/ant-1.10.12.jar
 
 echo $CLASSPATH
 
