@@ -2,10 +2,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,21 @@ public class MavenTestOrder {
     private final Path sureFireDirectory;
     private final String testOrder;
 
+    public static void main(final String[] args) {
+        try {
+            String mvnLogPath = System.getProperty("mvnLogPath");
+            String surefirePath = System.getProperty("surefirePath");
+            String testOrder = System.getProperty("testOrder");
+            new MavenTestOrder(mvnLogPath, surefirePath, testOrder).run();
+
+            System.exit(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.exit(1);
+    }
+
     protected void run() throws Exception {
         final List<String> classOrder = getClassOrder(mvnTestLog.toFile());
         final List<Path> allResultsFolders = Files.walk(sureFireDirectory)
@@ -40,6 +57,10 @@ public class MavenTestOrder {
         int pass = 0;
         int fail = 0;
         JUnitCore junit = new JUnitCore();
+
+        if (testOrder.equals("shuffle")){
+            Collections.shuffle(classOrder);
+        }
         
         final RunListener listener = new RunListener();
         junit.addListener(listener);
@@ -58,6 +79,11 @@ public class MavenTestOrder {
                     File f = p.toFile();
                     List<String> testMethods = parseXML(f);
 
+                    if (testOrder.equals("shuffle")){
+                        Collections.shuffle(testMethods);
+                    }
+                    String name = ManagementFactory.getRuntimeMXBean().getName();
+                    System.out.println(name.split("@")[0]);
                     for (String testMethod : testMethods) {
                         Request request = Request.method(Class.forName(clazz), testMethod);
                         Result result = junit.run(request);
@@ -104,21 +130,6 @@ public class MavenTestOrder {
             }
         }
         return testNames;
-    }
-
-    public static void main(final String[] args) {
-        try {
-            String mvnLogPath = System.getProperty("mvnLogPath");
-            String surefirePath = System.getProperty("surefirePath");
-            String testOrder = System.getProperty("testOrder");
-            new MavenTestOrder(mvnLogPath, surefirePath, testOrder).run();
-
-            System.exit(0);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        System.exit(1);
     }
 
     private MavenTestOrder(String mvnLogPath, String surefirePath, String testOrder) {

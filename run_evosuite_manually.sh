@@ -2,7 +2,6 @@ MY_PATH=$(dirname "$0")
 mvn clean
 mvn compile -Drat.skip=true
 
-
 mkdir $(pwd)/evosuite-tests
 
 # java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $(pwd)/target/classes -Dctg_cores=2 -Dctg_memory=1000  -Dctg_bests_folder=../evosuite-tests -continuous EXECUTE -Dctg_time_per_class=1
@@ -36,7 +35,10 @@ echo "EvoSuite Tests Compiled"
 mvn test -l mvn-test.log
 
 echo "Run developer-written test in \`mvn test\` order"
-java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -Dshuffle=true MavenTestOrder;
+java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -DtestOrder=OD MavenTestOrder;
+
+echo "Run developer-written test in shuffle order"
+java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -DtestOrder=shuffle MavenTestOrder;
 
 echo "Run EvoSuite tests"
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
