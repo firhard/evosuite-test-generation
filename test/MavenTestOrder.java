@@ -10,12 +10,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.Collection;
+import org.junit.runner.manipulation.Filter;
 
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.Request;
 import org.junit.runner.notification.RunListener;
+import org.junit.runner.manipulation.Ordering;
+import org.junit.runner.manipulation.Orderer;
+import org.junit.runner.manipulation.InvalidOrderingException;
+import org.junit.runner.manipulation.Orderable;
+import org.junit.runner.OrderWith;
+// import org.junit.runner.manipulation.Orderable;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,6 +53,7 @@ public class MavenTestOrder {
     private final Path mvnTestLog;
     private final Path sureFireDirectory;
     private final String testOrder;
+    private static String log = "";
 
     public static void main(final String[] args) {
         try {
@@ -65,13 +76,51 @@ public class MavenTestOrder {
                 .filter(path -> path.toString().contains("TEST-"))
                 .collect(Collectors.toList());
         final String shuffleOrder = testOrder;
+        final List<Class> classes = new ArrayList<>();
         int pass = 0;
         int fail = 0;
         JUnitCore junit = new JUnitCore();
 
-        if (testOrder.equals("shuffle")){
-            Collections.shuffle(classOrder);
+        // if (testOrder.equals("shuffle")){
+        //     Collections.shuffle(classOrder);
+        // }
+
+        for (String clazz : classOrder) {
+            classes.add(Class.forName(clazz));
         }
+        
+        junit.addListener(new XMLListener());
+
+        Result result = junit.run(Request.classes(classes.toArray(new Class[0]))
+        .orderWith(new Ordering() {
+            public boolean validateOrderingIsCorrect() {
+                return false;
+            }
+
+            public List<Description> orderItems(Collection<Description> descriptions) {
+                List<Description> ordered = new ArrayList<>(descriptions);
+                ArrayList<Description> shuffled = new ArrayList<>(descriptions.size());
+                // ordered.forEach((Description description) -> {
+                //     Description childDescription = description.childlessCopy();
+                //     // System.out.println(description.getChildren());
+                //     // System.out.println(childDescription);
+                //     List<Description> childrens = new ArrayList<>(description.getChildren());
+                //     // System.out.println("Before: " + childrens);
+                //     Collections.shuffle(childrens);
+                //     // System.out.println("After: " + childrens);
+                //     for(Description children : childrens){
+                //         childDescription.addChild(children);
+                        
+                //     }
+                //     // System.out.println(childDescription.getChildren());
+                //     shuffled.add(childDescription);
+                //     // System.out.println(childDescription);
+                // });
+                // System.out.println(shuffled);
+                Collections.shuffle(ordered);
+                return ordered;
+            }
+        }));
         
         // final RunListener listener = new RunListener();
         // junit.addListener(new TextListener(System.out));
@@ -81,7 +130,7 @@ public class MavenTestOrder {
         // JUnitCoreRunListener runListener = new JUnitCoreRunListener( reporter, classMethodCounts );
         // startCapture( runListener );
         // junit.addListeners();
-        junit.addListener(new XMLListener());
+        
         // junit.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
         //     @Override
         //     public void testRunStarted(Description description) throws Exception {
@@ -91,33 +140,33 @@ public class MavenTestOrder {
         // });
         
         // junit.addListener(new MyJunitListener());
-        for (String clazz : classOrder){
-            for (final Path p : allResultsFolders) {
-                if (p.toString().contains(clazz)){
-                    File f = p.toFile();
-                    List<String> testMethods = parseXML(f);
+        // for (String clazz : classOrder){
+        //     for (final Path p : allResultsFolders) {
+        //         if (p.toString().contains(clazz)){
+        //             File f = p.toFile();
+        //             List<String> testMethods = parseXML(f);
 
-                    if (testOrder.equals("shuffle")){
-                        Collections.shuffle(testMethods);
-                    }
-                    // String name = ManagementFactory.getRuntimeMXBean().getName();
-                    // System.out.println(name.split("@")[0]);
-                    for (String testMethod : testMethods) {
-                        Request request = Request.method(Class.forName(clazz), testMethod);
-                        // Request request = Request.method(Class.forName(clazz));
-                        Result result = junit.run(request);
+        //             if (testOrder.equals("shuffle")){
+        //                 Collections.shuffle(testMethods);
+        //             }
+        //             // String name = ManagementFactory.getRuntimeMXBean().getName();
+        //             // System.out.println(name.split("@")[0]);
+        //             for (String testMethod : testMethods) {
+        //                 Request request = Request.method(Class.forName(clazz), testMethod);
+        //                 // Request request = Request.method(Class.forName(clazz));
+        //                 Result result = junit.run(request);
                         
-                        if(result.wasSuccessful() == true) {
-                            pass++;
-                            System.out.print(".");
-                        } else {
-                            fail++;
-                            System.out.print("E");
-                        }
-                    }
-                }
-            }
-        }
+        //                 if(result.wasSuccessful() == true) {
+        //                     pass++;
+        //                     System.out.print(".");
+        //                 } else {
+        //                     fail++;
+        //                     System.out.print("E");
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         // System.out.println(listener);
         System.out.println("");
@@ -164,7 +213,7 @@ public class MavenTestOrder {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                if (line.trim().startsWith("[INFO] Running ")) {
+                if (line.trim().startsWith("[INFO] Running ") && !line.trim().contains("$")) {
                     String className = line.trim().split(" ")[2];
                     classNames.add(className);
                 }
@@ -190,111 +239,111 @@ public class MavenTestOrder {
         }
     }
 
-    public static class JUnitResultFormatterAsRunListener extends RunListener {
-        protected final JUnitResultFormatter formatter;
-        private ByteArrayOutputStream stdout,stderr;
-        private PrintStream oldStdout,oldStderr;
-        private int problem;
-        private long startTime;
+    // public static class JUnitResultFormatterAsRunListener extends RunListener {
+    //     protected final JUnitResultFormatter formatter;
+    //     private ByteArrayOutputStream stdout,stderr;
+    //     private PrintStream oldStdout,oldStderr;
+    //     private int problem;
+    //     private long startTime;
 
-        private JUnitResultFormatterAsRunListener(JUnitResultFormatter formatter) {
-            this.formatter = formatter;
-        }
+    //     private JUnitResultFormatterAsRunListener(JUnitResultFormatter formatter) {
+    //         this.formatter = formatter;
+    //     }
 
-        @Override
-        public void testRunStarted(Description description) throws Exception {
-            System.out.println("Start");
-            formatter.startTestSuite(new JUnitTest(description.getDisplayName()));
-            formatter.startTest(new DescriptionAsTest(description));
-            problem = 0;
-            startTime = System.currentTimeMillis();
+    //     @Override
+    //     public void testRunStarted(Description description) throws Exception {
+    //         System.out.println("Start");
+    //         formatter.startTestSuite(new JUnitTest(description.getDisplayName()));
+    //         formatter.startTest(new DescriptionAsTest(description));
+    //         problem = 0;
+    //         startTime = System.currentTimeMillis();
 
-            this.oldStdout = System.out;
-            this.oldStderr = System.err;
-            System.setOut(new PrintStream(stdout = new ByteArrayOutputStream()));
-            System.setErr(new PrintStream(stderr = new ByteArrayOutputStream()));
-        }
+    //         this.oldStdout = System.out;
+    //         this.oldStderr = System.err;
+    //         System.setOut(new PrintStream(stdout = new ByteArrayOutputStream()));
+    //         System.setErr(new PrintStream(stderr = new ByteArrayOutputStream()));
+    //     }
 
-        @Override
-        public void testRunFinished(Result result) throws Exception {
-        }
+    //     @Override
+    //     public void testRunFinished(Result result) throws Exception {
+    //     }
 
-        @Override
-        public void testStarted(Description description) throws Exception {
+    //     @Override
+    //     public void testStarted(Description description) throws Exception {
             
-        }
+    //     }
 
-        @Override
-        public void testFinished(Description description) throws Exception {
-            // System.out.flush();
-            // System.err.flush();
-            // System.setOut(oldStdout);
-            // System.setErr(oldStderr);
+    //     @Override
+    //     public void testFinished(Description description) throws Exception {
+    //         // System.out.flush();
+    //         // System.err.flush();
+    //         // System.setOut(oldStdout);
+    //         // System.setErr(oldStderr);
 
-            // formatter.setSystemOutput(stdout.toString());
-            // formatter.setSystemError(stderr.toString());
-            // formatter.endTest(new DescriptionAsTest(description));
+    //         // formatter.setSystemOutput(stdout.toString());
+    //         // formatter.setSystemError(stderr.toString());
+    //         // formatter.endTest(new DescriptionAsTest(description));
 
-            // JUnitTest suite = new JUnitTest(description.getDisplayName());
-            // suite.setCounts(1,problem,0);
-            // suite.setRunTime(System.currentTimeMillis()-startTime);
-            // formatter.endTestSuite(suite);
-        }
+    //         // JUnitTest suite = new JUnitTest(description.getDisplayName());
+    //         // suite.setCounts(1,problem,0);
+    //         // suite.setRunTime(System.currentTimeMillis()-startTime);
+    //         // formatter.endTestSuite(suite);
+    //     }
 
-        @Override
-        public void testFailure(Failure failure) throws Exception {
-            testAssumptionFailure(failure);
-        }
+    //     @Override
+    //     public void testFailure(Failure failure) throws Exception {
+    //         testAssumptionFailure(failure);
+    //     }
 
-        @Override
-        public void testAssumptionFailure(Failure failure) {
-            problem++;
-            formatter.addError(new DescriptionAsTest(failure.getDescription()), failure.getException());
-        }
+    //     @Override
+    //     public void testAssumptionFailure(Failure failure) {
+    //         problem++;
+    //         formatter.addError(new DescriptionAsTest(failure.getDescription()), failure.getException());
+    //     }
 
-        @Override
-        public void testIgnored(Description description) throws Exception {
-            super.testIgnored(description);
-        }
-    }
+    //     @Override
+    //     public void testIgnored(Description description) throws Exception {
+    //         super.testIgnored(description);
+    //     }
+    // }
 
-    public static class DescriptionAsTest implements Test {
-        private final Description description;
+    // public static class DescriptionAsTest implements Test {
+    //     private final Description description;
 
-        public DescriptionAsTest(Description description) {
-            this.description = description;
-        }
+    //     public DescriptionAsTest(Description description) {
+    //         this.description = description;
+    //     }
 
-        public int countTestCases() {
-            return 1;
-        }
+    //     public int countTestCases() {
+    //         return 1;
+    //     }
 
-        public void run(TestResult result) {
-            throw new UnsupportedOperationException();
-        }
+    //     public void run(TestResult result) {
+    //         throw new UnsupportedOperationException();
+    //     }
 
-        /**
-         * {@link JUnitResultFormatter} determines the test name by reflection.
-         */
-        public String getName() {
-            return description.getDisplayName();
-        }
+    //     /**
+    //      * {@link JUnitResultFormatter} determines the test name by reflection.
+    //      */
+    //     public String getName() {
+    //         return description.getDisplayName();
+    //     }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+    //     @Override
+    //     public boolean equals(Object o) {
+    //         if (this == o) return true;
+    //         if (o == null || getClass() != o.getClass()) return false;
 
-            DescriptionAsTest that = (DescriptionAsTest) o;
+    //         DescriptionAsTest that = (DescriptionAsTest) o;
 
-            if (!description.equals(that.description)) return false;
+    //         if (!description.equals(that.description)) return false;
 
-            return true;
-        }
+    //         return true;
+    //     }
 
-        @Override
-        public int hashCode() {
-            return description.hashCode();
-        }
-    }
+    //     @Override
+    //     public int hashCode() {
+    //         return description.hashCode();
+    //     }
+    // }
 }

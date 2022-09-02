@@ -7,15 +7,17 @@ mkdir $(pwd)/evosuite-tests
 mkdir $(pwd)/test-reports
 
 # java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $(pwd)/target/classes -Dctg_cores=2 -Dctg_memory=1000  -Dctg_bests_folder=../evosuite-tests -continuous EXECUTE -Dctg_time_per_class=1
+mvn dependency:copy-dependencies
 
-export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/dependencies/evosuite-standalone-runtime-1.2.0.jar:$MY_PATH/dependencies/junit-4.12.jar:$MY_PATH/dependencies/hamcrest-core-1.3.jar:$MY_PATH/test:$(pwd)/target/test-classes:$MY_PATH/dependencies/ant-junit-1.10.12.jar:$MY_PATH/dependencies/ant-launcher-1.10.12.jar:$MY_PATH/dependencies/ant-1.10.12.jar
+DEPENDENCIES=$(find $(pwd)/target/dependency -type f  | tr '\n' ':')
+
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/dependencies/evosuite-standalone-runtime-1.2.0.jar:$MY_PATH/dependencies/junit-4.13.jar:$MY_PATH/dependencies/hamcrest-core-1.3.jar:$MY_PATH/test:$(pwd)/target/test-classes:$MY_PATH/dependencies/ant-junit-1.10.12.jar:$MY_PATH/dependencies/ant-launcher-1.10.12.jar:$MY_PATH/dependencies/ant-1.10.12.jar:$DEPENDENCIES
 
 echo $CLASSPATH
 
 javac $MY_PATH/test/ShuffleTestRunner.java
 javac $MY_PATH/test/MavenTestOrder.java
 
-mvn dependency:copy-dependencies
 
 TESTS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.java)
 echo "Compiling EvoSuite tests"
@@ -34,7 +36,7 @@ for x in $TESTS; do
 done
 echo "EvoSuite Tests Compiled"
 
-mvn test -l mvn-test.log
+mvn test -l mvn-test.log -Drat.skip=true
 
 echo "Run developer-written test in \`mvn test\` order"
 java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -DtestOrder=OD MavenTestOrder;
@@ -56,7 +58,8 @@ tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
-java -Dclasses=${tclass} ShuffleTestRunner;
+echo $TEST_CLASS
+java -Dclasses=${tclass} -Dorder=shuffle ShuffleTestRunner;
 
 # ignore this part for now
 # mvn test -Drat.skip=true

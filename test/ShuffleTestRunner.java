@@ -2,6 +2,13 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.Request;
+import org.junit.runner.notification.RunListener;
+import org.junit.runner.manipulation.Ordering;
+import org.junit.runner.manipulation.Orderer;
+import org.junit.runner.manipulation.InvalidOrderingException;
+import org.junit.runner.manipulation.Orderable;
+import org.junit.runner.OrderWith;
+import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -11,48 +18,58 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-
 public class ShuffleTestRunner {
    public static void main(String[] args) throws Exception {
       String testClasses = System.getProperty("classes");
+      String order = System.getProperty("order");
       List<String> testClassesList = Arrays.asList(testClasses.split(","));
-      Collections.shuffle(testClassesList); //shuffle test classes
-      int pass = 0;
-      int fail = 0;
+      List<Class> classes = new ArrayList<>();
+
+      if (order.equals("shuffle")) {
+         Collections.shuffle(testClassesList); //shuffle test classes
+      }
 
       for(String testClass : testClassesList){
-         Class clazz = Class.forName(testClass);
-         Method[] methods = clazz.getDeclaredMethods();
-         List<Method> testMethodsList = Arrays.asList(methods);
-         Collections.shuffle(testMethodsList); //shuffle test cases
-         for (Method testMethod : testMethodsList){
-            // need to check annotations (as of now EvoSuite does not have @Before/@After so it should be working fine)
-            // Annotation[] annotations = testMethod.getDeclaredAnnotations();
-            
-            Request request = Request.method(clazz, testMethod.getName());
-            Result result = new JUnitCore().run(request);
-         
-            for (Failure failure : result.getFailures()) {
-               System.out.println("");
-               System.out.println(failure.toString());
-            }
-            
-            if(result.wasSuccessful() == true) {
-               pass++;
-               System.out.print(".");
-            } else {
-               fail++;
-               System.out.print("E");
-            }
-         }
+         classes.add(Class.forName(testClass));
       }
-      System.out.println("");
-      System.out.println("Pass: " + pass + ", Fail: " + fail);
-      System.out.println("");
+
+      JUnitCore junit = new JUnitCore();
+      junit.addListener(new RunListener() {
+         @Override
+         public void testRunStarted(Description description) throws Exception {
+             System.out.println("testRunStarted " + description);
+         }
+   
+         @Override
+         public void testStarted(Description description) throws Exception {
+             System.out.println("testStarted " + description.getDisplayName());
+         }
+
+         @Override
+         public void testRunFinished(Result result) throws Exception {
+             System.out.println("testRunFinished " + result);
+         }
+      });
+
+      Result result = junit.run(Request.classes(classes.toArray(new Class[0]))
+         .orderWith(new Ordering() {
+            public boolean validateOrderingIsCorrect() {
+               return false;
+            }
+
+            public List<Description> orderItems(Collection<Description> descriptions) {
+               List<Description> ordered = new ArrayList<>(descriptions);
+               if (order.equals("shuffle")) {
+                  Collections.shuffle(ordered);
+               }
+               return ordered;
+            }
+      }));
    }
 }  	
