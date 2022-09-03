@@ -13,7 +13,6 @@ testClasses = [testClass.strip() for testClass in testClasses]
 testClasses = random.sample(testClasses, len(testClasses)) # shuffle test class order
 
 mvnTestArgs = ""
-print("HELLO")
 
 for testClass in testClasses:
     doc = ET.parse(testClass)

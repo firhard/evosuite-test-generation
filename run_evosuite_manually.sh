@@ -9,11 +9,10 @@ mkdir $(pwd)/test-reports
 # java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $(pwd)/target/classes -Dctg_cores=2 -Dctg_memory=1000  -Dctg_bests_folder=../evosuite-tests -continuous EXECUTE -Dctg_time_per_class=1
 mvn dependency:copy-dependencies
 
-DEPENDENCIES=$(find $(pwd)/target/dependency -type f  | tr '\n' ':')
+mvnDEPENDENCIES=$(find $(pwd)/target/dependency -type f  | tr '\n' ':')
+testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
 
-export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/dependencies/evosuite-standalone-runtime-1.2.0.jar:$MY_PATH/dependencies/junit-4.13.jar:$MY_PATH/dependencies/hamcrest-core-1.3.jar:$MY_PATH/test:$(pwd)/target/test-classes:$MY_PATH/dependencies/ant-junit-1.10.12.jar:$MY_PATH/dependencies/ant-launcher-1.10.12.jar:$MY_PATH/dependencies/ant-1.10.12.jar:$DEPENDENCIES
-
-echo $CLASSPATH
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
 
 javac $MY_PATH/test/ShuffleTestRunner.java
 javac $MY_PATH/test/MavenTestOrder.java
@@ -43,6 +42,9 @@ java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-repo
 
 echo "Run developer-written test in shuffle order"
 java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -DtestOrder=shuffle MavenTestOrder;
+
+#update classpath again to run EvoSuite tests
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes
 
 echo "Run EvoSuite tests"
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)

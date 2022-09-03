@@ -9,6 +9,7 @@ import org.junit.runner.manipulation.InvalidOrderingException;
 import org.junit.runner.manipulation.Orderable;
 import org.junit.runner.OrderWith;
 import org.junit.runner.Description;
+import org.junit.internal.TextListener;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -40,6 +41,7 @@ public class ShuffleTestRunner {
       }
 
       JUnitCore junit = new JUnitCore();
+      junit.addListener(new TextListener(System.out));
       junit.addListener(new RunListener() {
          @Override
          public void testRunStarted(Description description) throws Exception {
@@ -53,7 +55,7 @@ public class ShuffleTestRunner {
 
          @Override
          public void testRunFinished(Result result) throws Exception {
-             System.out.println("testRunFinished " + result);
+            //  System.out.println("testRunFinished " + stream);
          }
       });
 
