@@ -86,43 +86,29 @@ public class MavenTestOrder {
         for (String clazz : classOrder) {
             classes.add(Class.forName(clazz));
         }
-        // Runner runner = Runner.runList(classOrder).get();
-        String allTests = "";
-        int j = 0;
-        for (String clazz : classOrder){
-            for (final Path p : allResultsFolders) {
-                if (p.toString().contains(clazz)){
-                    File f = p.toFile();
-                    List<String> testMethods = parseXML(f);
-                    Collections.shuffle(testMethods);
-                    int i = 0;
-                    allTests = allTests + clazz + "#";
-                    for (String testMethod : testMethods) {
-                        if (i++ == testMethods.size() - 1) allTests = allTests + testMethod;
-                        else allTests = allTests + testMethod + "+";
-                    }
-                    if (j++ == classOrder.size() - 1) allTests = allTests;
-                    else allTests = allTests + ",";
-                    
-                }
-            }
-        }
-        // System.out.println("allTests: " + allTests);
 
         if (testOrder.equals("shuffle")){
             Collections.shuffle(classes);
         }
-        
-        junit.addListener(new TextListener(System.out));
 
-        // junit.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
-        //     @Override
-        //     public void testRunStarted(Description description) throws Exception {
-        //         formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jmeter-datadog-backend-listener/test-reports","TEST-" + description.getDisplayName() + ".xml")));
-        //         super.testRunStarted(description);
-        //     }
-        // });
-        junit.addListener(new XMLListener());
+        junit.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
+            @Override
+            public void testRunStarted(Description description) throws Exception {
+                // System.out.println(description.getClassName());
+                if (testOrder.equals("shuffle")) formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jmeter-datadog-backend-listener/test-reports","TEST-" + description.getDisplayName() + "-shuffle-" + System.currentTimeMillis() + ".xml")));
+                else formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jmeter-datadog-backend-listener/test-reports","TEST-" + description.getDisplayName() + "-" + System.currentTimeMillis() + ".xml")));
+                
+                super.testRunStarted(description);
+            }
+
+            @Override
+            public void testStarted(Description description) throws Exception {
+                // if (testOrder.equals("shuffle")) formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jmeter-datadog-backend-listener/test-reports","TEST-" + description.getDisplayName() + "-shuffle.xml")));
+                // else formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jmeter-datadog-backend-listener/test-reports","TEST-" + description.getDisplayName() + ".xml")));
+                
+                super.testStarted(description);
+            }
+        });
 
         Result result = junit.run(Request.classes(classes.toArray(new Class[0]))
         .orderWith(new Ordering() {
@@ -151,58 +137,6 @@ public class MavenTestOrder {
                 return shuffled;
             }
         }));
-
-        // final RunListener listener = new RunListener();
-        // junit.addListener(new TextListener(System.out));
-        // HashMap<String, TestSet> classMethodCounts = new HashMap<>();
-        // ConcurrentRunListener reporter =
-        //     createInstance( classMethodCounts, reporterManagerFactory, parallelClasses, false );
-        // JUnitCoreRunListener runListener = new JUnitCoreRunListener( reporter, classMethodCounts );
-        // startCapture( runListener );
-        // junit.addListeners();
-        
-        // junit.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
-        //     @Override
-        //     public void testRunStarted(Description description) throws Exception {
-        //         formatter.setOutput(new FileOutputStream(new File("/home/firhard/Documents/flakyTestGeneration/datasets/new/jackson-annotations/test-reports","TEST-" + description.getDisplayName() + ".xml")));
-        //         super.testRunStarted(description);
-        //     }
-        // });
-        
-        // junit.addListener(new MyJunitListener());
-        // for (String clazz : classOrder){
-        //     for (final Path p : allResultsFolders) {
-        //         if (p.toString().contains(clazz)){
-        //             File f = p.toFile();
-        //             List<String> testMethods = parseXML(f);
-
-        //             if (testOrder.equals("shuffle")){
-        //                 Collections.shuffle(testMethods);
-        //             }
-        //             // String name = ManagementFactory.getRuntimeMXBean().getName();
-        //             // System.out.println(name.split("@")[0]);
-        //             for (String testMethod : testMethods) {
-        //                 Request request = Request.method(Class.forName(clazz), testMethod);
-        //                 // Request request = Request.method(Class.forName(clazz));
-        //                 Result result = junit.run(request);
-                        
-        //                 if(result.wasSuccessful() == true) {
-        //                     pass++;
-        //                     // System.out.print(".");
-        //                 } else {
-        //                     fail++;
-        //                     // System.out.print("E");
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-        // System.out.println(listener);
-        // System.out.println("");
-        // System.out.println("Pass: " + pass + ", Fail: " + fail);
-        // System.out.println("");
-        
     }
 
     private List<String> parseXML(File xmlFile) throws IOException, SAXException, ParserConfigurationException {
@@ -255,19 +189,15 @@ public class MavenTestOrder {
         return classNames;
     }
 
-    public class XMLListener extends RunListener {
-        @Override
-        public void testRunStarted(Description description) throws Exception {
-            // System.out.println("testRunStarted " + description);
-            // System.out.println(description.toString());
-        }
 
-        @Override
-        public void testStarted(Description description) throws Exception {
-            System.out.println("testStarted " + description.getDisplayName());
-            // System.out.println(description.toString());
-        }
-    }
+    // public static class JUnitResultFormatterTest implements JUnitResultFormatter {
+    //     @Override
+    //     public void startTest(final Test t) {
+    //         System.out.println(t);
+    //         super.startTest(t);
+    //         // testStarts.put(createDescription(t), System.currentTimeMillis());
+    //     }
+    // }
 
     public static class JUnitResultFormatterAsRunListener extends RunListener {
         protected final JUnitResultFormatter formatter;
@@ -275,6 +205,7 @@ public class MavenTestOrder {
         private PrintStream oldStdout,oldStderr;
         private int problem;
         private long startTime;
+        private String displayName;
 
         private JUnitResultFormatterAsRunListener(JUnitResultFormatter formatter) {
             this.formatter = formatter;
@@ -282,40 +213,29 @@ public class MavenTestOrder {
 
         @Override
         public void testRunStarted(Description description) throws Exception {
+            displayName = description.getDisplayName();
+            formatter.startTestSuite(new JUnitTest(displayName));
         }
 
         @Override
         public void testRunFinished(Result result) throws Exception {
+            JUnitTest suite = new JUnitTest(displayName);
+            suite.setCounts(1,problem,0);
+            suite.setRunTime(System.currentTimeMillis()-startTime);
+            formatter.endTestSuite(suite);
         }
 
         @Override
         public void testStarted(Description description) throws Exception {
-            formatter.startTestSuite(new JUnitTest(description.getDisplayName()));
+            String testMethod = description.getDisplayName();
             formatter.startTest(new DescriptionAsTest(description));
             problem = 0;
             startTime = System.currentTimeMillis();
-
-            this.oldStdout = System.out;
-            this.oldStderr = System.err;
-            System.setOut(new PrintStream(stdout = new ByteArrayOutputStream()));
-            System.setErr(new PrintStream(stderr = new ByteArrayOutputStream()));
         }
 
         @Override
         public void testFinished(Description description) throws Exception {
-            System.out.flush();
-            System.err.flush();
-            System.setOut(oldStdout);
-            System.setErr(oldStderr);
-
-            formatter.setSystemOutput(stdout.toString());
-            formatter.setSystemError(stderr.toString());
-            formatter.endTest(new DescriptionAsTest(description));
-
-            JUnitTest suite = new JUnitTest(description.getDisplayName());
-            suite.setCounts(1,problem,0);
-            suite.setRunTime(System.currentTimeMillis()-startTime);
-            formatter.endTestSuite(suite);
+            formatter.endTest(new DescriptionAsTest(description));            
         }
 
         @Override
@@ -354,8 +274,13 @@ public class MavenTestOrder {
          * {@link JUnitResultFormatter} determines the test name by reflection.
          */
         public String getName() {
-            return description.getDisplayName();
+            return description.getMethodName();
         }
+
+        public String getClassName(){
+            return description.getClassName();
+        }
+
 
         @Override
         public boolean equals(Object o) {

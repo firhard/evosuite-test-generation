@@ -3,6 +3,7 @@ ROOT_PATH=$(dirname "$0")
 
 mkdir dependencies
 
+# wget https://downloads.apache.org/ant/binaries/apache-ant-1.10.12-bin.tar.gz -P $ROOT_PATH/dependencies
 wget https://github.com/EvoSuite/evosuite/releases/download/v1.2.0/evosuite-1.2.0.jar -P $ROOT_PATH/dependencies
 wget https://github.com/EvoSuite/evosuite/releases/download/v1.2.0/evosuite-standalone-runtime-1.2.0.jar -P $ROOT_PATH/dependencies
 

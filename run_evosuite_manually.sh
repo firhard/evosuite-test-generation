@@ -2,6 +2,7 @@ MY_PATH=$(dirname "$0")
 mvn clean
 mvn compile -Drat.skip=true
 
+# remove test-reports
 rm -r $(pwd)/test-reports
 mkdir $(pwd)/evosuite-tests
 mkdir $(pwd)/test-reports
