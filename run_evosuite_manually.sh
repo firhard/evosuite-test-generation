@@ -3,7 +3,7 @@ mvn clean
 mvn compile -Drat.skip=true
 
 # remove test-reports
-rm -r $(pwd)/test-reports
+# rm -r $(pwd)/test-reports
 mkdir $(pwd)/evosuite-tests
 mkdir $(pwd)/test-reports
 
@@ -15,8 +15,8 @@ testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':'
 
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
 
-javac $MY_PATH/test/ShuffleTestRunner.java
-javac $MY_PATH/test/MavenTestOrder.java
+javac $MY_PATH/test/EvoSuiteTestRunner.java
+javac $MY_PATH/test/MavenTestRunner.java
 
 
 TESTS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.java)
@@ -39,30 +39,32 @@ echo "EvoSuite Tests Compiled"
 mvn test -l mvn-test.log -Drat.skip=true
 
 echo "Run developer-written test in \`mvn test\` order"
-java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -DtestOrder=OD MavenTestOrder;
+java -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD MavenTestRunner;
 
 echo "Run developer-written test in shuffle order"
-java -DmvnLogPath=$(pwd)/mvn-test.log -DsurefirePath=$(pwd)/target/surefire-reports -DtestOrder=shuffle MavenTestOrder;
+java -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle MavenTestRunner;
 
 #update classpath again to run EvoSuite tests
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes
 
-echo "Run EvoSuite tests"
-TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
-tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
-tclass=${tclass//_scaffolding/}
-tclass=${tclass//.class/}
-tclass=${tclass//\//.}
-java org.junit.runner.JUnitCore ${tclass};
+# TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
+# tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
+# tclass=${tclass//_scaffolding/}
+# tclass=${tclass//.class/}
+# tclass=${tclass//\//.}
+# java org.junit.runner.JUnitCore ${tclass};
 
-echo "Run EvoSuite tests in shuffle order"
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
 tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
-echo $TEST_CLASS
-java -Dclasses=${tclass} -Dorder=shuffle ShuffleTestRunner;
+
+echo "Run EvoSuite tests"
+java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner;
+
+echo "Run EvoSuite tests in shuffle order"
+java -Dclasses=${tclass} -Dorder=shuffle -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner;
 
 # ignore this part for now
 # mvn test -Drat.skip=true
