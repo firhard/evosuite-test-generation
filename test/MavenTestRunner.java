@@ -87,7 +87,6 @@ public class MavenTestRunner {
         junit.addListener(new JUnitResultFormatterAsRunListener(new XMLFormatter()) {
             @Override
             public void testRunStarted(Description description) throws Exception {
-                System.out.println(description.getClassName());
                 if (testOrder.equals("shuffle"))
                     formatter.setOutput(new FileOutputStream(new File(
                             reportPath,

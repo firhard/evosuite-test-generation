@@ -18,7 +18,6 @@ export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$tes
 javac $MY_PATH/test/EvoSuiteTestRunner.java
 javac $MY_PATH/test/MavenTestRunner.java
 
-
 TESTS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.java)
 echo "Compiling EvoSuite tests"
 for x in $TESTS; do
@@ -61,10 +60,10 @@ tclass=${tclass//.class/}
 tclass=${tclass//\//.}
 
 echo "Run EvoSuite tests"
-java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner;
+java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner &> /dev/null
 
 echo "Run EvoSuite tests in shuffle order"
-java -Dclasses=${tclass} -Dorder=shuffle -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner;
+java -Dclasses=${tclass} -Dorder=shuffle -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner &> /dev/null
 
 # ignore this part for now
 # mvn test -Drat.skip=true
