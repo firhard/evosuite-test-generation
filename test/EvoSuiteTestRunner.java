@@ -27,12 +27,7 @@ import junit.framework.Test;
 import junit.framework.TestResult;
 
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.taskdefs.optional.junit.IgnoredTestListener;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitResultFormatter;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitVersionHelper;
-import org.apache.tools.ant.taskdefs.optional.junit.XMLConstants;
+import org.apache.tools.ant.taskdefs.optional.junit.*;
 import org.apache.tools.ant.util.DOMElementWriter;
 import org.apache.tools.ant.util.DateUtils;
 import org.apache.tools.ant.util.FileUtils;

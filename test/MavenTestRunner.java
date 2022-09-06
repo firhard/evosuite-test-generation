@@ -1,68 +1,59 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import java.util.Collection;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestResult;
-
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.taskdefs.optional.junit.IgnoredTestListener;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitResultFormatter;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner;
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitVersionHelper;
-import org.apache.tools.ant.taskdefs.optional.junit.XMLConstants;
+import org.apache.tools.ant.taskdefs.optional.junit.*;
 import org.apache.tools.ant.util.DOMElementWriter;
 import org.apache.tools.ant.util.DateUtils;
 import org.apache.tools.ant.util.FileUtils;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-import org.junit.runner.Request;
-import org.junit.runner.notification.RunListener;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Text;
-import org.junit.runner.manipulation.Ordering;
+import org.junit.platform.engine.discovery.MethodSelector;
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.TestIdentifier;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 import org.junit.runner.Description;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
+import org.junit.runner.Result;
+import org.junit.runner.manipulation.Ordering;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 
 public class MavenTestRunner {
     private final Path mvnTestLog;
+    private final Path sureFireDirectory;
     private final String testOrder;
     private final String reportPath;
+    private final String dependencies;
     String className;
 
     public static void main(final String[] args) {
         try {
             String mvnLogPath = System.getProperty("mvnLogPath");
+            String surefirePath = System.getProperty("surefirePath");
             String reportPath = System.getProperty("reportPath");
             String testOrder = System.getProperty("testOrder");
-            new MavenTestRunner(mvnLogPath, reportPath, testOrder).run();
-
+            String dependencies = System.getProperty("dependencies");
+            new MavenTestRunner(mvnLogPath, surefirePath, reportPath, testOrder, dependencies).run();
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,64 +64,123 @@ public class MavenTestRunner {
 
     protected void run() throws Exception {
         final List<String> classOrder = getClassOrder(mvnTestLog.toFile());
+        final List<Path> allResultsFolders = Files.walk(sureFireDirectory)
+                .filter(path -> path.toString().contains("TEST-"))
+                .collect(Collectors.toList());
         final List<Class> classes = new ArrayList<>();
-        JUnitCore junit = new JUnitCore();
-
         for (String clazz : classOrder) {
             classes.add(Class.forName(clazz));
         }
 
-        if (testOrder.equals("shuffle")) {
-            Collections.shuffle(classes);
+        if (dependencies.contains("junit-jupiter") || dependencies.contains("junit-jupiter-api")){
+            System.out.println("Using JUnit5");
+            List<MethodSelector> dSelectors = new ArrayList<>();
+            for (String clazz : classOrder) {
+                for (final Path p : allResultsFolders) {
+                    if (p.toString().contains(clazz)) {
+                        File f = p.toFile();
+                        List<String> testMethods = parseXML(f);
+                        for (String testMethod : testMethods) {
+                            dSelectors.add(selectMethod(Class.forName(clazz), testMethod));
+                        }
+                    }
+                }
+            }
+            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
+                    .selectors(dSelectors)
+                    .build();
+            Launcher launcher = LauncherFactory.create();
+            launcher.discover(request);
+            launcher.registerTestExecutionListeners(new SummaryGeneratingListener(){
+                @Override
+                public void executionStarted( TestIdentifier testIdentifier ) {
+                    // System.out.println(testIdentifier.getDisplayName());
+                }
+            });
+            launcher.execute(request);
+        } else {
+            System.out.println("Using JUnit4");
+            JUnitCore junit = new JUnitCore();
+
+            if (testOrder.equals("shuffle")) {
+                Collections.shuffle(classes);
+            }
+
+            junit.addListener(new JUnitResultFormatterAsRunListener(new XMLFormatter()) {
+                @Override
+                public void testRunStarted(Description description) throws Exception {
+                    if (testOrder.equals("shuffle"))
+                        formatter.setOutput(new FileOutputStream(new File(
+                                reportPath,
+                                "TEST-" + description.getDisplayName() + "-shuffle-" + System.currentTimeMillis()
+                                        + ".xml")));
+                    else
+                        formatter.setOutput(new FileOutputStream(new File(
+                                reportPath,
+                                "TEST-" + description.getDisplayName() + "-" + System.currentTimeMillis() + ".xml")));
+                    super.testRunStarted(description);
+                }
+            });
+
+            Result result = junit.run(Request.classes(classes.toArray(new Class[0]))
+                    .orderWith(new Ordering() {
+                        public List<Description> orderItems(Collection<Description> descriptions) {
+                            List<Description> ordered = new ArrayList<>(descriptions);
+                            ArrayList<Description> shuffled = new ArrayList<>(descriptions.size());
+                            ordered.forEach((Description description) -> {
+                                Description childDescription = description.childlessCopy();
+                                List<Description> childrens = new ArrayList<>(description.getChildren());
+                                if (testOrder.equals("shuffle")) {
+                                    Collections.shuffle(childrens);
+                                }
+                                for (Description children : childrens) {
+                                    childDescription.addChild(children);
+
+                                }
+                                shuffled.add(childDescription);
+                            });
+                            if (testOrder.equals("shuffle")) {
+                                Collections.shuffle(shuffled);
+                            }
+                            return shuffled;
+                        }
+                    }));
         }
 
-        junit.addListener(new JUnitResultFormatterAsRunListener(new XMLFormatter()) {
-            @Override
-            public void testRunStarted(Description description) throws Exception {
-                if (testOrder.equals("shuffle"))
-                    formatter.setOutput(new FileOutputStream(new File(
-                            reportPath,
-                            "TEST-" + description.getDisplayName() + "-shuffle-" + System.currentTimeMillis()
-                                    + ".xml")));
-                else
-                    formatter.setOutput(new FileOutputStream(new File(
-                            reportPath,
-                            "TEST-" + description.getDisplayName() + "-" + System.currentTimeMillis() + ".xml")));
-                super.testRunStarted(description);
-            }
-        });
-
-        Result result = junit.run(Request.classes(classes.toArray(new Class[0]))
-                .orderWith(new Ordering() {
-                    public List<Description> orderItems(Collection<Description> descriptions) {
-                        List<Description> ordered = new ArrayList<>(descriptions);
-                        ArrayList<Description> shuffled = new ArrayList<>(descriptions.size());
-                        ordered.forEach((Description description) -> {
-                            Description childDescription = description.childlessCopy();
-                            List<Description> childrens = new ArrayList<>(description.getChildren());
-                            if (testOrder.equals("shuffle")) {
-                                Collections.shuffle(childrens);
-                            }
-                            for (Description children : childrens) {
-                                childDescription.addChild(children);
-
-                            }
-                            shuffled.add(childDescription);
-                        });
-                        if (testOrder.equals("shuffle")) {
-                            Collections.shuffle(shuffled);
-                        }
-                        return shuffled;
-                    }
-                }));
     }
 
-    private MavenTestRunner(String mvnLogPath, String reportPath, String testOrder) {
+    private MavenTestRunner(String mvnLogPath, String surefirePath, String reportPath, String testOrder, String dependencies) {
         this.mvnTestLog = Paths.get(mvnLogPath);
+        this.sureFireDirectory = Paths.get(surefirePath);
         this.reportPath = reportPath;
         this.testOrder = testOrder;
+        this.dependencies = dependencies;
     }
 
+    private List<String> parseXML(File xmlFile) throws IOException, SAXException, ParserConfigurationException {
+        List<String> testNames = new ArrayList<>();
+        String className = "";
+        double testTime = 0;
+        DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document doc = (Document) dBuilder.parse(xmlFile);
+        Element rootElement = doc.getDocumentElement();
+        rootElement.normalize();
+        className = rootElement.getAttribute("name");
+        testTime = Double.parseDouble(rootElement.getAttribute("time"));
+        NodeList nList = doc.getElementsByTagName("testcase");
+        for (int temp = 0; temp < nList.getLength(); temp++) {
+            Node nNode = nList.item(temp);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
+                if (eElement.getElementsByTagName("skipped").getLength() != 0) {
+                    continue;
+                }
+                String testName = eElement.getAttribute("name");
+                testNames.add(testName);
+            }
+        }
+        return testNames;
+    }
     private List<String> getClassOrder(File f) {
         List<String> classNames = new ArrayList<>();
         try {
@@ -138,10 +188,10 @@ public class MavenTestRunner {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                if (line.trim().startsWith("Running ") && !line.trim().contains("$")) {
+                if (line.trim().contains("Running ") && !line.trim().contains("$")) {
                     String[] lineWithRunning = line.trim().split(" ");
-                    String className = lineWithRunning[lineWithRunning.length - 1];
-                    classNames.add(className);
+                    String className1 = lineWithRunning[lineWithRunning.length - 1];
+                    classNames.add(className1);
                 }
             }
             fileReader.close();

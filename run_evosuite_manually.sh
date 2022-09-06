@@ -1,9 +1,11 @@
 MY_PATH=$(dirname "$0")
 mvn clean
 mvn compile -Drat.skip=true
+mvn dependency:copy-dependencies
+mvn test -l mvn-test.log -Drat.skip=true
+mvn dependency:build-classpath -Dmdep.outputFile=cp.txt
 
 # remove test-reports
-# rm -r $(pwd)/test-reports
 mkdir $(pwd)/evosuite-tests
 mkdir $(pwd)/test-reports
 
@@ -12,11 +14,11 @@ mvn dependency:copy-dependencies
 
 mvnDEPENDENCIES=$(find $(pwd)/target/dependency -type f  | tr '\n' ':')
 testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
+# mvnDEPENDENCIES=$(<$(pwd)/cp.txt)
 
+#set classpath to run developer-written test
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
 
-javac $MY_PATH/test/EvoSuiteTestRunner.java
-javac $MY_PATH/test/MavenTestRunner.java
 
 TESTS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.java)
 echo "Compiling EvoSuite tests"
@@ -35,14 +37,19 @@ for x in $TESTS; do
 done
 echo "EvoSuite Tests Compiled"
 
-mvn test -l mvn-test.log -Drat.skip=true
+javac $MY_PATH/test/EvoSuiteTestRunner.java
+javac $MY_PATH/test/MavenTestRunner.java
+
+testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar  -not -name \*evosuite\* | tr '\n' ':')
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
 
 echo "Run developer-written test in \`mvn test\` order"
-java -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD MavenTestRunner;
+java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
 
 echo "Run developer-written test in shuffle order"
-java -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle MavenTestRunner;
+java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
 
+testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
 #update classpath again to run EvoSuite tests
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes
 
@@ -64,16 +71,3 @@ java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/test-reports EvoSuiteTes
 
 echo "Run EvoSuite tests in shuffle order"
 java -Dclasses=${tclass} -Dorder=shuffle -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner &> /dev/null
-
-# ignore this part for now
-# mvn test -Drat.skip=true
-# python3 $MY_PATH/remove_failing_generated_tests.py
-# mvn test -Drat.skip=true
-# TESTS_COMPILED=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class)
-# for x in $TESTS_COMPILED; do
-#         rm $x
-# done
-# python3 $MY_PATH/run_test_random_order.py
-# for j in {1..1}; do 
-    # echo $tclass
-# done
