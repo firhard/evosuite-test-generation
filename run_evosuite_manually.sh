@@ -2,7 +2,6 @@ MY_PATH=$(dirname "$0")
 mvn compile -Drat.skip=true
 mvn dependency:copy-dependencies
 mvn test -l mvn-test.log -Drat.skip=true
-mvn dependency:build-classpath -Dmdep.outputFile=cp.txt
 
 mkdir $(pwd)/test-reports
 
