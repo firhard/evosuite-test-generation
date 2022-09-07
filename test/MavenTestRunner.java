@@ -6,13 +6,17 @@ import org.apache.tools.ant.taskdefs.optional.junit.*;
 import org.apache.tools.ant.util.DOMElementWriter;
 import org.apache.tools.ant.util.DateUtils;
 import org.apache.tools.ant.util.FileUtils;
+import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.discovery.MethodSelector;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.TestIdentifier;
+import org.junit.platform.launcher.TestPlan;
+import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.reporting.legacy.xml.LegacyXmlReportGeneratingListener;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -36,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 
 public class MavenTestRunner {
@@ -74,29 +79,28 @@ public class MavenTestRunner {
 
         if (dependencies.contains("junit-jupiter") || dependencies.contains("junit-jupiter-api")){
             System.out.println("Using JUnit5");
-            List<MethodSelector> dSelectors = new ArrayList<>();
+            List<MethodSelector> mSelectors = new ArrayList<>();
             for (String clazz : classOrder) {
                 for (final Path p : allResultsFolders) {
-                    if (p.toString().contains(clazz)) {
+                    if (p.toString().contains("TEST-" + clazz + ".xml")) {
                         File f = p.toFile();
                         List<String> testMethods = parseXML(f);
                         for (String testMethod : testMethods) {
-                            dSelectors.add(selectMethod(Class.forName(clazz), testMethod));
+                            mSelectors.add(selectMethod(testMethod));
                         }
                     }
                 }
             }
+            Collections.shuffle(mSelectors);
+            PrintWriter out = new PrintWriter(new StringWriter());
+            LegacyXmlReportGeneratingListener listener = new LegacyXmlReportGeneratingListener(
+                    Paths.get(reportPath),out);
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                    .selectors(dSelectors)
+                    .selectors(mSelectors)
                     .build();
             Launcher launcher = LauncherFactory.create();
             launcher.discover(request);
-            launcher.registerTestExecutionListeners(new SummaryGeneratingListener(){
-                @Override
-                public void executionStarted( TestIdentifier testIdentifier ) {
-                    // System.out.println(testIdentifier.getDisplayName());
-                }
-            });
+            launcher.registerTestExecutionListeners(listener);
             launcher.execute(request);
         } else {
             System.out.println("Using JUnit4");
@@ -122,7 +126,7 @@ public class MavenTestRunner {
                 }
             });
 
-            Result result = junit.run(Request.classes(classes.toArray(new Class[0]))
+            junit.run(Request.classes(classes.toArray(new Class[0]))
                     .orderWith(new Ordering() {
                         public List<Description> orderItems(Collection<Description> descriptions) {
                             List<Description> ordered = new ArrayList<>(descriptions);
@@ -175,8 +179,10 @@ public class MavenTestRunner {
                 if (eElement.getElementsByTagName("skipped").getLength() != 0) {
                     continue;
                 }
+                String classname = eElement.getAttribute("classname");
                 String testName = eElement.getAttribute("name");
-                testNames.add(testName);
+                if(!testName.contains("[") || !testName.contains("]"))
+                    testNames.add(classname + "#" + testName + "()");
             }
         }
         return testNames;
@@ -188,7 +194,7 @@ public class MavenTestRunner {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                if (line.trim().contains("Running ") && !line.trim().contains("$")) {
+                if (line.trim().contains("Running ")) {
                     String[] lineWithRunning = line.trim().split(" ");
                     String className1 = lineWithRunning[lineWithRunning.length - 1];
                     classNames.add(className1);
