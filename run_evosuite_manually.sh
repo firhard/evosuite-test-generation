@@ -1,16 +1,11 @@
 MY_PATH=$(dirname "$0")
-mvn clean
 mvn compile -Drat.skip=true
 mvn dependency:copy-dependencies
 mvn test -l mvn-test.log -Drat.skip=true
 mvn dependency:build-classpath -Dmdep.outputFile=cp.txt
 
-# remove test-reports
-mkdir $(pwd)/evosuite-tests
 mkdir $(pwd)/test-reports
 
-# java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $(pwd)/target/classes -Dctg_cores=2 -Dctg_memory=1000  -Dctg_bests_folder=../evosuite-tests -continuous EXECUTE -Dctg_time_per_class=1
-mvn dependency:copy-dependencies
 
 mvnDEPENDENCIES=$(find $(pwd)/target/dependency -type f  | tr '\n' ':')
 testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
@@ -53,15 +48,8 @@ testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':'
 #update classpath again to run EvoSuite tests
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes
 
-# TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
-# tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
-# tclass=${tclass//_scaffolding/}
-# tclass=${tclass//.class/}
-# tclass=${tclass//\//.}
-# java org.junit.runner.JUnitCore ${tclass};
-
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
-tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
+tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\/\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
