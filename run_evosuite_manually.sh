@@ -28,7 +28,7 @@ testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':'
 export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes
 
 TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
-tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\/\//}
+tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
