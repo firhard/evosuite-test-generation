@@ -18,9 +18,13 @@ export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$tes
 
 echo "Run developer-written test in Deterministic order"
 java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
+mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-$(date +%s).xml
+mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-vintage-$(date +%s).xml
 
 echo "Run developer-written test in shuffle order"
 java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
+mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-shuffle-$(date +%s).xml
+mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-shuffle-vintage-$(date +%s).xml
 
 #run EvoSuite Tests
 testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')

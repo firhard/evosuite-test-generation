@@ -2,6 +2,7 @@ import junit.framework.Test;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitVersionHelper;
 import org.junit.platform.engine.discovery.MethodSelector;
+import org.junit.platform.engine.discovery.ClassSelector;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
 public class MavenTestRunner {
     private final Path mvnTestLog;
@@ -69,9 +71,10 @@ public class MavenTestRunner {
         }
 
         if (dependencies.contains("junit-jupiter") || dependencies.contains("junit-jupiter-api")){
-            System.out.println("Using JUnit5");
+            List<ClassSelector> cSelector = new ArrayList<>();
             List<MethodSelector> mSelectors = new ArrayList<>();
             for (String clazz : classOrder) {
+                cSelector.add(selectClass(clazz));
                 for (final Path p : allResultsFolders) {
                     if (p.toString().contains("TEST-" + clazz + ".xml")) {
                         File f = p.toFile();
@@ -82,10 +85,14 @@ public class MavenTestRunner {
                     }
                 }
             }
-            Collections.shuffle(mSelectors);
+            if (testOrder.equals("shuffle")) {
+                Collections.shuffle(cSelector);
+                Collections.shuffle(mSelectors);
+            }
+            // System.out.println(mSelectors);
             PrintWriter out = new PrintWriter(new StringWriter());
             LegacyXmlReportGeneratingListener listener = new LegacyXmlReportGeneratingListener(
-                    Paths.get(reportPath + System.currentTimeMillis()),out);
+                    Paths.get(reportPath),out);
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                     .selectors(mSelectors)
                     .build();
@@ -93,8 +100,8 @@ public class MavenTestRunner {
             launcher.discover(request);
             launcher.registerTestExecutionListeners(listener);
             launcher.execute(request);
+            System.exit(0);
         } else {
-            System.out.println("Using JUnit4");
             JUnitCore junit = new JUnitCore();
 
             if (testOrder.equals("shuffle")) {
@@ -140,6 +147,7 @@ public class MavenTestRunner {
                             return shuffled;
                         }
                     }));
+            System.exit(0);
         }
 
     }

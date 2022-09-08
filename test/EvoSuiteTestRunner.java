@@ -4,6 +4,7 @@ import org.apache.tools.ant.taskdefs.optional.junit.JUnitVersionHelper;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
+import org.junit.runner.Result;
 import org.junit.runner.manipulation.Ordering;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -58,15 +59,16 @@ public class EvoSuiteTestRunner {
             }
         });
 
-        junit.run(Request.classes(classes.toArray(new Class[0]))
-                .orderWith(new Ordering() {
-                    public List<Description> orderItems(Collection<Description> descriptions) {
-                        List<Description> ordered = new ArrayList<>(descriptions);
-                        if (testOrder.equals("shuffle")) {
-                            Collections.shuffle(ordered);
-                        }
-                        return ordered;
-                    }
-                }));
+        Result result = junit.run(Request.classes(classes.toArray(new Class<?>[classes.size()]))
+        .orderWith(new Ordering() {
+            public List<Description> orderItems(Collection<Description> descriptions) {
+                List<Description> ordered = new ArrayList<>(descriptions);
+                if (testOrder.equals("shuffle")) {
+                    Collections.shuffle(ordered);
+                }
+                return ordered;
+            }
+        }));
+        System.exit(0);
     }
 }
