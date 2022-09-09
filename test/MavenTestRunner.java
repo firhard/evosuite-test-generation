@@ -71,10 +71,8 @@ public class MavenTestRunner {
         }
 
         if (dependencies.contains("junit-jupiter") || dependencies.contains("junit-jupiter-api")){
-            List<ClassSelector> cSelector = new ArrayList<>();
             List<MethodSelector> mSelectors = new ArrayList<>();
             for (String clazz : classOrder) {
-                cSelector.add(selectClass(clazz));
                 for (final Path p : allResultsFolders) {
                     if (p.toString().contains("TEST-" + clazz + ".xml")) {
                         File f = p.toFile();
@@ -86,7 +84,6 @@ public class MavenTestRunner {
                 }
             }
             if (testOrder.equals("shuffle")) {
-                Collections.shuffle(cSelector);
                 Collections.shuffle(mSelectors);
             }
             // System.out.println(mSelectors);
@@ -180,7 +177,7 @@ public class MavenTestRunner {
                 }
                 String classname = eElement.getAttribute("classname");
                 String testName = eElement.getAttribute("name");
-                if(!testName.contains("[") || !testName.contains("]"))
+                if((!testName.contains("[") || !testName.contains("]")) && classname.contains("."))
                     testNames.add(classname + "#" + testName + "()");
             }
         }

@@ -13,18 +13,18 @@ javac $MY_PATH/test/EvoSuiteTestRunner.java
 javac $MY_PATH/test/MavenTestRunner.java
 
 #Run Developer Tests
-testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar  -not -name \*evosuite\* | tr '\n' ':')
-export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
+testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar  -not -name \*evosuite\* -not -name \*hamcrest\* -not -name \*tools.jar\* | tr '\n' ':')
+export CLASSPATH=$(pwd)/target/classes:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
 
 echo "Run developer-written test in Deterministic order"
 java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
-mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-$(date +%s).xml
-mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-vintage-$(date +%s).xml
+mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-$(date +%s).xml &> /dev/null
+mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-vintage-$(date +%s).xml &> /dev/null
 
 echo "Run developer-written test in shuffle order"
 java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
-mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-shuffle-$(date +%s).xml
-mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-shuffle-vintage-$(date +%s).xml
+mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-shuffle-$(date +%s).xml &> /dev/null
+mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-shuffle-vintage-$(date +%s).xml &> /dev/null
 
 #run EvoSuite Tests
 testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
