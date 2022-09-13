@@ -1,44 +1,64 @@
 MY_PATH=$(dirname "$0")
-mvn compile -Drat.skip=true
-mvn dependency:copy-dependencies
-mvn test -l mvn-test.log -Drat.skip=true
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# mvn compile -Drat.skip=true
+# mvn dependency:copy-dependencies
+# mvn test -l mvn-test.log -Drat.skip=true
 
 mkdir $(pwd)/test-reports
 
 mvnDEPENDENCIES=$(find $(pwd)/target/dependency -type f  | tr '\n' ':')
-testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
+testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
 # mvnDEPENDENCIES=$(<$(pwd)/cp.txt)
-export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
-javac $MY_PATH/test/EvoSuiteTestRunner.java
-javac $MY_PATH/test/MavenTestRunner.java
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
+javac $SCRIPT_DIR/test/EvoSuiteTestRunner.java
+javac $SCRIPT_DIR/test/MavenTestRunner.java
 
 #Run Developer Tests
-testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar  -not -name \*evosuite\* -not -name \*hamcrest\* -not -name \*tools.jar\* | tr '\n' ':')
-export CLASSPATH=$(pwd)/target/classes:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
+testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar  -not -name \*evosuite\* -not -name \*hamcrest\* -not -name \*tools.jar\* | tr '\n' ':')
+export CLASSPATH=$(pwd)/target/classes:$SCRIPT_DIR/test:$testDEPENDENCIES:$(pwd)/target/test-classes:$mvnDEPENDENCIES
 
 echo "Run developer-written test in Deterministic order"
-java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
-mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-$(date +%s).xml &> /dev/null
-mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-vintage-$(date +%s).xml &> /dev/null
+for value in {1..1000} 
+do 
+    java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=OD -Ddependencies=$mvnDEPENDENCIES MavenTestRunner
+    mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-$(date +%s).xml &> /dev/null
+    mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-vintage-$(date +%s).xml &> /dev/null
+done
 
 echo "Run developer-written test in shuffle order"
-java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle -Ddependencies=$mvnDEPENDENCIES MavenTestRunner;
-mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-shuffle-$(date +%s).xml &> /dev/null
-mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-shuffle-vintage-$(date +%s).xml &> /dev/null
+for value in {1..1000} 
+do 
+    java -DsurefirePath=$(pwd)/target/surefire-reports -DmvnLogPath=$(pwd)/mvn-test.log -DreportPath=$(pwd)/test-reports -DtestOrder=shuffle -Ddependencies=$mvnDEPENDENCIES MavenTestRunner
+    mv $(pwd)/test-reports/TEST-junit-jupiter.xml $(pwd)/test-reports/TEST-class-shuffle-$(date +%s).xml &> /dev/null
+    mv $(pwd)/test-reports/TEST-junit-vintage.xml $(pwd)/test-reports/TEST-class-shuffle-vintage-$(date +%s).xml &> /dev/null
+done
 
 #run EvoSuite Tests
-testDEPENDENCIES=$(find $MY_PATH/dependencies -type f -name \*.jar | tr '\n' ':')
+testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
 #update classpath again to run EvoSuite tests
-export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$MY_PATH/test:$testDEPENDENCIES:$(pwd)/target/test-classes
+export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$(pwd)/target/test-classes
 
-TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
-tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
+# TEST_CLASS=$(find $(pwd)/evosuite-tests/ -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*)
+# tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\/\//}
+# tclass=${tclass//_scaffolding/}
+# tclass=${tclass//.class/}
+# tclass=${tclass//\//.}
+# java org.junit.runner.JUnitCore ${tclass};
+
+TEST_CLASS=$(find $(pwd)/evosuite-tests -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
+tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\/\//}
 tclass=${tclass//_scaffolding/}
 tclass=${tclass//.class/}
 tclass=${tclass//\//.}
 
 echo "Run EvoSuite tests in Deterministic Order"
-java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner &> /dev/null
+for value in {1..1000} 
+do 
+    java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner
+done
 
 echo "Run EvoSuite tests in Shuffled order"
-java -Dclasses=${tclass} -Dorder=shuffle -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner &> /dev/null
+for value in {1..1000} 
+do 
+    java -Dclasses=${tclass} -Dorder=shuffle -DreportPath=$(pwd)/test-reports EvoSuiteTestRunner
+done
