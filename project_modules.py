@@ -1,9 +1,8 @@
 import os
 
-
 projectPath = os.getcwd()
 lines = open(projectPath + '/mvn-compile.log','r').read().splitlines()
-compiledProjects = [projects for projects in lines if "/target/classes" in projects and "source files to" in projects]
+compiledProjects = [projects for projects in lines if "/target/classes" in projects and "source file" in projects and "Compiling" in projects]
 projectPath = []
 for project in compiledProjects:
     x = project.split(' ')

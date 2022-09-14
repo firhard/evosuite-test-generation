@@ -121,27 +121,14 @@ public class MavenTestRunner {
                 }
             });
 
-            junit.run(Request.classes(classes.toArray(new Class[0]))
+            junit.run(Request.classes(classes.toArray(new Class<?>[classes.size()]))
                     .orderWith(new Ordering() {
                         public List<Description> orderItems(Collection<Description> descriptions) {
                             List<Description> ordered = new ArrayList<>(descriptions);
-                            ArrayList<Description> shuffled = new ArrayList<>(descriptions.size());
-                            ordered.forEach((Description description) -> {
-                                Description childDescription = description.childlessCopy();
-                                List<Description> childrens = new ArrayList<>(description.getChildren());
-                                if (testOrder.equals("shuffle")) {
-                                    Collections.shuffle(childrens);
-                                }
-                                for (Description children : childrens) {
-                                    childDescription.addChild(children);
-
-                                }
-                                shuffled.add(childDescription);
-                            });
                             if (testOrder.equals("shuffle")) {
-                                Collections.shuffle(shuffled);
+                                Collections.shuffle(ordered);
                             }
-                            return shuffled;
+                            return ordered;
                         }
                     }));
             System.exit(0);
