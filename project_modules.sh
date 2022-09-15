@@ -1,11 +1,14 @@
+PROJECT_PATH=$1
+FLAKY_FILTER=$2
 MY_PATH=$(dirname "$0")
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 # check for multiple modules project
-if [ ! -f "$(pwd)/mvn-compile.log" ]; then
+if [ ! -f "$1/mvn-compile.log" ]; then
     mvn compile -l mvn-compile.log -Drat.skip=true
 fi
 
-MODULE_PATH=$(python3 $MY_PATH/project_modules.py)
+MODULE_PATH=$(python3 $SCRIPT_DIR/project_modules.py)
 for value in $MODULE_PATH
 do 
     cd $value
@@ -18,21 +21,21 @@ do
 
     #update classpath
     testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
-    export CLASSPATH=$(pwd)/target/classes:$(pwd)/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$(pwd)/target/test-classes
-    TEST_CLASS=$(find $(pwd)/evosuite-tests -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
-    tclass=${TEST_CLASS//$(pwd)\/evosuite-tests\//}
+    export CLASSPATH=$1/target/classes:$1/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$1/target/test-classes
+    TEST_CLASS=$(find $1/evosuite-tests -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
+    tclass=${TEST_CLASS//$1\/evosuite-tests\//}
     tclass=${tclass//_scaffolding/}
     tclass=${tclass//.class/}
     tclass=${tclass//\//.}
 
-    mkdir $(pwd)/first-report
+    mkdir $1/first-report
     echo "Run EvoSuite test once"
-    java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/first-report EvoSuiteTestRunner 
+    java -Dclasses=${tclass} -Dorder=OD -DreportPath=$1/first-report EvoSuiteTestRunner 
     
-    XML_REPORT=$(find $(pwd)/first-report -type f  -name \*.xml)
+    XML_REPORT=$(find $1/first-report -type f  -name \*.xml)
     # comment out tests that are broken when being run once
-    perl $SCRIPT_DIR/rm_broken_tests.pl $XML_REPORT $(pwd)/evosuite-tests
-    rm -r $(pwd)/first-report
+    perl $SCRIPT_DIR/rm_broken_tests.pl $XML_REPORT $1/evosuite-tests
+    rm -r $1/first-report
 
     # compile non-failing tests only
     bash $SCRIPT_DIR/compile_evosuite_tests.sh
