@@ -30,7 +30,7 @@ do
     java -Dclasses=${tclass} -Dorder=OD -DreportPath=$(pwd)/first-report EvoSuiteTestRunner 
     
     XML_REPORT=$(find $(pwd)/first-report -type f  -name \*.xml)
-    # comment tests that are broken when being run once
+    # comment out tests that are broken when being run once
     perl $SCRIPT_DIR/rm_broken_tests.pl $XML_REPORT $(pwd)/evosuite-tests
     rm -r $(pwd)/first-report
 
