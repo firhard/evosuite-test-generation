@@ -1,11 +1,10 @@
 MY_PATH=$(dirname "$0")
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-mkdir $PROJECT_PATH/test-reports
-
-PROJECT_PATH=$0
-ORDER=$1
-TEST_NUMBER=$2
+PROJECT_PATH=$1
+ORDER=$2
+TEST_NUMBER=$3
+REPORT_PATH=$4
 
 mvnDEPENDENCIES=$(find $PROJECT_PATH/target/dependency -type f  | tr '\n' ':')
 testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
@@ -18,6 +17,6 @@ javac $SCRIPT_DIR/test/MavenTestRunner.java
 testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar  -not -name \*evosuite\* -not -name \*hamcrest\* -not -name \*tools.jar\* | tr '\n' ':')
 export CLASSPATH=$PROJECT_PATH/target/classes:$SCRIPT_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes:$mvnDEPENDENCIES
 
-java -DsurefirePath=$PROJECT_PATH/target/surefire-reports -DmvnLogPath=$PROJECT_PATH/mvn-test.log -DreportPath=$PROJECT_PATH/test-reports -DtestOrder=$ORDER -Ddependencies=$mvnDEPENDENCIES -DtestReport=$TEST_NUMBER MavenTestRunner &> /dev/null
-mv $PROJECT_PATH/test-reports/TEST-junit-jupiter.xml $PROJECT_PATH/test-reports/TEST-class-$TEST_NUMBER.xml &> /dev/null
-mv $PROJECT_PATH/test-reports/TEST-junit-vintage.xml $PROJECT_PATH/test-reports/TEST-class-vintage-$TEST_NUMBER.xml &> /dev/null
+java -DsurefirePath=$PROJECT_PATH/target/surefire-reports -DmvnLogPath=$PROJECT_PATH/mvn-test.log -DreportPath=$REPORT_PATH -DtestOrder=$ORDER -Ddependencies=$mvnDEPENDENCIES -DtestReport=$TEST_NUMBER MavenTestRunner &> /dev/null
+mv $REPORT_PATH/TEST-junit-jupiter.xml $REPORT_PATH/TEST-class-$TEST_NUMBER.xml &> /dev/null
+mv $REPORT_PATH/TEST-junit-vintage.xml $REPORT_PATH/TEST-class-vintage-$TEST_NUMBER.xml &> /dev/null
