@@ -58,4 +58,5 @@ mvn test -l mvn-test.log -Drat.skip=true
 #0 for with flaky tests fiter
 # bash $CWD/project_modules.sh ${REPOSITORY_DIR} 0
 
-# bash $CWD/project_modules.sh ${REPOSITORY_DIR} 1 #this is without flaky tests filter
+#1 without flaky tests filter
+# bash $CWD/project_modules.sh ${REPOSITORY_DIR} 1 
