@@ -42,6 +42,7 @@ public class MavenTestRunner {
     private final String testOrder;
     private final String reportPath;
     private final String dependencies;
+    private final String testReport;
     String className;
 
     public static void main(final String[] args) {
@@ -51,7 +52,8 @@ public class MavenTestRunner {
             String reportPath = System.getProperty("reportPath");
             String testOrder = System.getProperty("testOrder");
             String dependencies = System.getProperty("dependencies");
-            new MavenTestRunner(mvnLogPath, surefirePath, reportPath, testOrder, dependencies).run();
+            String testReport = System.getProperty("testReport");
+            new MavenTestRunner(mvnLogPath, surefirePath, reportPath, testOrder, dependencies, testReport).run();
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,7 +85,7 @@ public class MavenTestRunner {
                     }
                 }
             }
-            if (testOrder.equals("shuffle")) {
+            if (testOrder.equals("1")) {
                 Collections.shuffle(mSelectors);
             }
             // System.out.println(mSelectors);
@@ -101,22 +103,22 @@ public class MavenTestRunner {
         } else {
             JUnitCore junit = new JUnitCore();
 
-            if (testOrder.equals("shuffle")) {
+            if (testOrder.equals("1")) {
                 Collections.shuffle(classes);
             }
-
+            System.out.println(testReport);
             junit.addListener(new MavenJUnitResultFormatterAsRunListener(this, new MavenXMLFormatter(this)) {
                 @Override
                 public void testRunStarted(Description description) throws Exception {
-                    if (testOrder.equals("shuffle"))
+                    if (testOrder.equals("1"))
                         formatter.setOutput(new FileOutputStream(new File(
                                 reportPath,
-                                "TEST-" + description.getDisplayName() + "-shuffle-" + System.currentTimeMillis()
+                                "TEST-" + description.getDisplayName() + "-shuffle-" + testReport
                                         + ".xml")));
                     else
                         formatter.setOutput(new FileOutputStream(new File(
                                 reportPath,
-                                "TEST-" + description.getDisplayName() + "-" + System.currentTimeMillis() + ".xml")));
+                                "TEST-" + description.getDisplayName() + "-" + testReport + ".xml")));
                     super.testRunStarted(description);
                 }
             });
@@ -125,7 +127,7 @@ public class MavenTestRunner {
                     .orderWith(new Ordering() {
                         public List<Description> orderItems(Collection<Description> descriptions) {
                             List<Description> ordered = new ArrayList<>(descriptions);
-                            if (testOrder.equals("shuffle")) {
+                            if (testOrder.equals("1")) {
                                 Collections.shuffle(ordered);
                             }
                             return ordered;
@@ -136,12 +138,13 @@ public class MavenTestRunner {
 
     }
 
-    private MavenTestRunner(String mvnLogPath, String surefirePath, String reportPath, String testOrder, String dependencies) {
+    private MavenTestRunner(String mvnLogPath, String surefirePath, String reportPath, String testOrder, String dependencies, String testReport) {
         this.mvnTestLog = Paths.get(mvnLogPath);
         this.sureFireDirectory = Paths.get(surefirePath);
         this.reportPath = reportPath;
         this.testOrder = testOrder;
         this.dependencies = dependencies;
+        this.testReport = testReport;
     }
 
     private List<String> parseXML(File xmlFile) throws IOException, SAXException, ParserConfigurationException {

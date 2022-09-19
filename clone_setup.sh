@@ -24,10 +24,11 @@ debug_echo "    Project hash:         $PROJECT_HASH"
 echo "${PROJECT_URL##/*/}"
 
 CWD=$(pwd)
+mkdir $CWD/projects
 debug_echo " CWD = ${CWD}"
 
 # -- CLONE / COPY REPO
-REPOSITORY_DIR="${CWD}/${PROJECT_NAME}"
+REPOSITORY_DIR="${CWD}/projects/${PROJECT_NAME}"
 debug_echo "Clone Repository into ${REPOSITORY_DIR}"
 if [[ $PROJECT_URL == http* ]]
 then
@@ -55,3 +56,5 @@ mvn test -l mvn-test.log -Drat.skip=true
 
 #0 for with flaky tests fiter
 bash $CWD/project_modules.sh ${REPOSITORY_DIR} 0
+
+# bash $CWD/project_modules.sh ${REPOSITORY_DIR} 1 #this is without flaky tests filter

@@ -7,7 +7,7 @@ python3 $current_path/modify_pom_xml.py $(pwd)/pom.xml
 mvn evosuite:generate -DtimeInMinutesPerClass=0.5 -DmemoryInMB=2000 -Dcores=4 -Drat.skip=true 
 if [[ "$?" -ne 0 ]] ; then
     echo 'Could not perform mvn evosuite:generate, it will generate evosuite tests manually';
-    bash $current_path/run_evosuite_manually.sh
+    bash $current_path/run_evosuite_tests.sh
 else 
     mvn evosuite:export -Drat.skip=true
 fi

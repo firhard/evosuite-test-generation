@@ -17,26 +17,29 @@ public class EvoSuiteTestRunner {
     private final List<String> testClassesList;
     private final String testOrder;
     private final String reportPath;
+    private final String testReport;
     String className;
 
-    private EvoSuiteTestRunner(List<String> testClassesList, String testOrder, String reportPath) {
+    private EvoSuiteTestRunner(List<String> testClassesList, String testOrder, String reportPath, String testReport) {
         this.testClassesList = testClassesList;
         this.testOrder = testOrder;
         this.reportPath = reportPath;
+        this.testReport = testReport;
     }
 
     public static void main(String[] args) throws Exception {
         String testClasses = System.getProperty("classes");
         String testOrder = System.getProperty("order");
         String reportPath = System.getProperty("reportPath");
+        String testReport = System.getProperty("testReport");
         List<String> testClassesList = Arrays.asList(testClasses.split(","));
-        new EvoSuiteTestRunner(testClassesList, testOrder, reportPath).run();
+        new EvoSuiteTestRunner(testClassesList, testOrder, reportPath, testReport).run();
 
     }
 
     protected void run() throws Exception {
         List<Class> classes = new ArrayList<>();
-        if (testOrder.equals("shuffle")) {
+        if (testOrder.equals("1")) {
             Collections.shuffle(testClassesList); // shuffle test classes
         }
 
@@ -49,12 +52,12 @@ public class EvoSuiteTestRunner {
         junit.addListener(new EvoSuiteJUnitResultFormatterAsRunListener(this, new EvoSuiteXMLFormatter(this)) {
             @Override
             public void testRunStarted(Description description) throws Exception {
-                if (testOrder.equals("shuffle"))
+                if (testOrder.equals("1"))
                     formatter.setOutput(new FileOutputStream(new File(reportPath, "TEST-" + description.getDisplayName()
-                            + "-shuffle-evosuite-" + System.currentTimeMillis() + ".xml")));
+                            + "-shuffle-evosuite-" + testReport + ".xml")));
                 else
                     formatter.setOutput(new FileOutputStream(new File(reportPath, "TEST-" + description.getDisplayName()
-                            + "-evosuite-" + System.currentTimeMillis() + ".xml")));
+                            + "-evosuite-" + testReport + ".xml")));
                 super.testRunStarted(description);
             }
         });
@@ -63,7 +66,7 @@ public class EvoSuiteTestRunner {
         .orderWith(new Ordering() {
             public List<Description> orderItems(Collection<Description> descriptions) {
                 List<Description> ordered = new ArrayList<>(descriptions);
-                if (testOrder.equals("shuffle")) {
+                if (testOrder.equals("1")) {
                     Collections.shuffle(ordered);
                 }
                 return ordered;

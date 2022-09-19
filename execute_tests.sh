@@ -15,5 +15,5 @@ do
     if [ ! -f "$(pwd)/mvn-test.log" ]; then
         mvn test -l mvn-test.log -Drat.skip=true
     fi
-    bash $SCRIPT_DIR/run_evosuite_manually.sh
+    bash $SCRIPT_DIR/run_evosuite_tests.sh
 done
