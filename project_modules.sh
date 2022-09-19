@@ -4,7 +4,7 @@ MY_PATH=$(dirname "$0")
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # check for multiple modules project
-if [ ! -f "$1/mvn-compile.log" ]; then
+if [ ! -f "$PROJECT_PATH/mvn-compile.log" ]; then
     mvn compile -l mvn-compile.log -Drat.skip=true
 fi
 
