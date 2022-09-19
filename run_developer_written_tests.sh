@@ -14,17 +14,10 @@ export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:$SCR
 javac $SCRIPT_DIR/test/EvoSuiteTestRunner.java
 javac $SCRIPT_DIR/test/MavenTestRunner.java
 
-#run EvoSuite Tests
-testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
-#update classpath again to run EvoSuite tests
-export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
-TEST_CLASS=$(find $PROJECT_PATH/evosuite-tests -type f  -name \*.class -not -name \*$\* -not -name \*_scaffolding\*  | tr '\n' ',')
-tclass=${TEST_CLASS//$PROJECT_PATH\/evosuite-tests\//}
-tclass=${tclass//_scaffolding/}
-tclass=${tclass//.class/}
-tclass=${tclass//\//.}
+#Run Developer Tests
+testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar  -not -name \*evosuite\* -not -name \*hamcrest\* -not -name \*tools.jar\* | tr '\n' ':')
+export CLASSPATH=$PROJECT_PATH/target/classes:$SCRIPT_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes:$mvnDEPENDENCIES
 
-echo "Run EvoSuite tests in Deterministic Order"
-java -Dclasses=${tclass} -Dorder=$ORDER -DreportPath=$PROJECT_PATH/test-reports -DtestReport=$TEST_NUMBER EvoSuiteTestRunner &> /dev/null
-mv $PROJECT_PATH/test-reports/TEST-junit-jupiter.xml $PROJECT_PATH/test-reports/TEST-class-shuffle-$TEST_REPORT.xml &> /dev/null
-mv $PROJECT_PATH/test-reports/TEST-junit-vintage.xml $PROJECT_PATH/test-reports/TEST-class-shuffle-vintage-$TEST_REPORT.xml &> /dev/null
+java -DsurefirePath=$PROJECT_PATH/target/surefire-reports -DmvnLogPath=$PROJECT_PATH/mvn-test.log -DreportPath=$PROJECT_PATH/test-reports -DtestOrder=$ORDER -Ddependencies=$mvnDEPENDENCIES -DtestReport=$TEST_NUMBER MavenTestRunner &> /dev/null
+mv $PROJECT_PATH/test-reports/TEST-junit-jupiter.xml $PROJECT_PATH/test-reports/TEST-class-$TEST_NUMBER.xml &> /dev/null
+mv $PROJECT_PATH/test-reports/TEST-junit-vintage.xml $PROJECT_PATH/test-reports/TEST-class-vintage-$TEST_NUMBER.xml &> /dev/null
