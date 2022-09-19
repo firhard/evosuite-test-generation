@@ -5,7 +5,8 @@ PROJECT_PATH=$1
 FLAKY_FILTER=$2
 
 # generate tests
-if [[ $FLAKY_FILTER == 0]] then
+if [[ $FLAKY_FILTER == 0 ]] 
+then
     java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes -Dctg_cores=1 -Dctg_memory=1000  -Dctg_bests_folder=../evosuite-tests -continuous EXECUTE -Dctg_time_per_class=2
 else
     java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite \
