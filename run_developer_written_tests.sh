@@ -26,3 +26,5 @@ tclass=${tclass//\//.}
 
 echo "Run EvoSuite tests in Deterministic Order"
 java -Dclasses=${tclass} -Dorder=$ORDER -DreportPath=$PROJECT_PATH/test-reports -DtestReport=$TEST_NUMBER EvoSuiteTestRunner &> /dev/null
+mv $PROJECT_PATH/test-reports/TEST-junit-jupiter.xml $PROJECT_PATH/test-reports/TEST-class-shuffle-$TEST_REPORT.xml &> /dev/null
+mv $PROJECT_PATH/test-reports/TEST-junit-vintage.xml $PROJECT_PATH/test-reports/TEST-class-shuffle-vintage-$TEST_REPORT.xml &> /dev/null
