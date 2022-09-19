@@ -25,8 +25,8 @@ debug_echo "    Project hash:         $PROJECT_HASH"
 echo "${PROJECT_URL##/*/}"
 
 CWD=$(pwd)
-mkdir $CWD/projects
-debug_echo " CWD = ${CWD}"
+# mkdir $CWD/projects
+# debug_echo " CWD = ${CWD}"
 
 # -- CLONE / COPY REPO
 REPOSITORY_DIR="$PROJECT_PATH/${PROJECT_NAME}"
