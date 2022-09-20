@@ -1,4 +1,4 @@
-
+#!/bin/bash
 ROOT_PATH=$(dirname "$0")
 
 mkdir dependencies

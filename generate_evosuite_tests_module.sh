@@ -1,3 +1,4 @@
+#!/bin/bash
 PROJECT_PATH=$1
 FLAKY_FILTER=$2
 MY_PATH=$(dirname "$0")

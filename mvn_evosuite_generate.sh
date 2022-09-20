@@ -1,3 +1,4 @@
+#!/bin/bash
 # mvn evosuite:generate -Drat.skip=true
 current_path=$(dirname "$0")
 mvn compile -Drat.skip=true
