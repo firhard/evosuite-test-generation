@@ -9,7 +9,11 @@ SCRIPTS_DIR=$6
 ORDER_MOD=$(expr $ORDER % 2)
 echo $SCRIPT_DIR
 cp -Rp $PROJECT_PATH_SOURCE $PROJECT_PATH
-MODULES=$(python3 $SCRIPTS_DIR/project_modules.py $PROJECT_PATH)
+MODULES=$(python3.9 $SCRIPTS_DIR/project_modules.py $PROJECT_PATH)
+MODULES_LENGTH=$(python3.9 $SCRIPTS_DIR/project_modules.py $PROJECT_PATH | wc -l)
+if [ $MODULES_LENGTH == 0 ]; then
+    exit 1
+fi
 
 for MODULE in $MODULES
 do 

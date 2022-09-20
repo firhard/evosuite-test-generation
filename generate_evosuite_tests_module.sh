@@ -9,7 +9,12 @@ if [ ! -f "$PROJECT_PATH/mvn-compile.log" ]; then
     mvn compile -l mvn-compile.log -Drat.skip=true
 fi
 
-MODULES=$(python3 ./project_modules.py $PROJECT_PATH)
+MODULES=$(python3.9 $SCRIPTS_DIR/project_modules.py $PROJECT_PATH)
+MODULES_LENGTH=$(python3.9 $SCRIPTS_DIR/project_modules.py $PROJECT_PATH | wc -l)
+if [ $MODULES_LENGTH == 0 ]; then
+    exit 1
+fi
+
 for MODULE in $MODULES
 do 
     #generate tests
