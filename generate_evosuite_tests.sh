@@ -1,19 +1,19 @@
 #!/bin/bash
 MY_PATH=$(dirname "$0")
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
 PROJECT_PATH=$1
 FLAKY_FILTER=$2
+SCRIPTS_DIR=$3
+
 mkdir $PROJECT_PATH/evosuite-tests
 # generate tests
 if [[ $FLAKY_FILTER == 0 ]] 
 then
     java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes/ -Dctg_cores=1 -Dctg_memory=1000 -Dctg_bests_folder=evosuite-tests -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=2
 
-    testDEPENDENCIES=$(find ./dependencies -type f -name \*.jar | tr '\n' ':')
+    testDEPENDENCIES=$(find $SCRIPTS_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
 
     #set classpath to run developer-written test
-    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:./test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
+    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:$SCRIPTS_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
     TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f  -name \*.java)
     echo "Compiling EvoSuite tests"
@@ -41,10 +41,10 @@ then
 else
     java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes -Dtest_scaffolding=false -Dno_runtime_dependency=true -Djunit_check=false -Dsandbox=false -Dvirtual_fs=false -Dvirtual_net=false -Dreplace_calls=false -Dreplace_system_in=false -Dreplace_gui=false -Dreset_static_fields=false -Dreset_static_field_gets=false -Dreset_static_final_fields=false -Dctg_cores=1 -Dctg_memory=1000 -Dctg_bests_folder=evosuite-flaky -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=2
 
-    testDEPENDENCIES=$(find ./dependencies -type f -name \*.jar | tr '\n' ':')
+    testDEPENDENCIES=$(find $SCRIPTS_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
 
     #set classpath to run developer-written test
-    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-flaky/:./test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
+    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-flaky/:$SCRIPTS_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
     TESTS=$(find $PROJECT_PATH/evosuite-flaky/ -type f  -name \*.java)
     echo "Compiling EvoSuite tests"
