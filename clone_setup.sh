@@ -48,9 +48,9 @@ mvn compile -l mvn-compile.log -Drat.skip=true
 if grep "BUILD FAILURE" $(pwd)/mvn-compile.log; then 
     exit 1 
 fi
-# mvn dependency:copy-dependencies
+mvn dependency:copy-dependencies
 
-# mvn test -l mvn-test.log -Drat.skip=true
+mvn test -l mvn-test.log -Drat.skip=true
 # add check how many test fails
 # TEST_FAILURE=$(grep "Tests run:" $(pwd)/mvn-test.log)
 
