@@ -13,7 +13,7 @@ RESULT_DIR="/results"
 # -- PARSE ARGS
 PROJECT_URL=$1
 PROJECT_HASH=$2
-PROJECT_PATH=$3
+REPOSITORY_DIR=$3
 PROJECT_NAME=$(echo $PROJECT_URL | sed -e 's/.*\///g')
 
 # -- DEBUG OUTPUT
@@ -29,7 +29,6 @@ CWD=$(pwd)
 # debug_echo " CWD = ${CWD}"
 
 # -- CLONE / COPY REPO
-REPOSITORY_DIR="$PROJECT_PATH/${PROJECT_NAME}"
 debug_echo "Clone Repository into ${REPOSITORY_DIR}"
 if [[ $PROJECT_URL == http* ]]
 then
@@ -37,7 +36,7 @@ then
     if [[ -n "$PROJECT_HASH" ]]; then
         cd "${REPOSITORY_DIR}" || exit 1
         git reset --hard "${PROJECT_HASH}" || exit 1
-        cd "${PROJECT_PATH}" || exit 1
+        cd "${CWD}" || exit 1
     fi
     REPO_HASH=$(git --git-dir="${REPOSITORY_DIR}/.git" rev-parse HEAD)
 else
