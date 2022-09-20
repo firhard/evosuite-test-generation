@@ -10,10 +10,10 @@ if [[ $FLAKY_FILTER == 0 ]]
 then
     java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes/ -Dctg_cores=1 -Dctg_memory=1000 -Dctg_bests_folder=evosuite-tests -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=1
 
-    testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
+    testDEPENDENCIES=$(find ./dependencies -type f -name \*.jar | tr '\n' ':')
 
     #set classpath to run developer-written test
-    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
+    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:./test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
     TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f  -name \*.java)
     echo "Compiling EvoSuite tests"
@@ -60,10 +60,10 @@ else
     -continuous EXECUTE \
     -Dctg_time_per_class=2
 
-    testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
+    testDEPENDENCIES=$(find ./dependencies -type f -name \*.jar | tr '\n' ':')
 
     #set classpath to run developer-written test
-    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-flaky/:$SCRIPT_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
+    export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-flaky/:./test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
     TESTS=$(find $PROJECT_PATH/evosuite-flaky/ -type f  -name \*.java)
     echo "Compiling EvoSuite tests"

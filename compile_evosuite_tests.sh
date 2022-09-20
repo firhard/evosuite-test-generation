@@ -1,11 +1,11 @@
 #!/bin/bash
 MY_PATH=$(dirname "$0")
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-testDEPENDENCIES=$(find $SCRIPT_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
+testDEPENDENCIES=$(find ./dependencies -type f -name \*.jar | tr '\n' ':')
 
 PROJECT_PATH=$1
 #set classpath to run developer-written test
-export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:$SCRIPT_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
+export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:./test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
 
 TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f  -name \*.java)
