@@ -1,3 +1,4 @@
+#!/bin/bash
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 PROJECT_PATH_SOURCE=$1
 PROJECT_PATH=$2
@@ -5,7 +6,7 @@ ORDER=$3
 TEST_NUMBER=$4
 REPORT_PATH=$5
 ORDER_MOD=$(expr $ORDER % 2)
-
+echo $SCRIPT_DIR
 cp -Rp $PROJECT_PATH_SOURCE $PROJECT_PATH
 
 if [ $ORDER -le 1 ]; then
