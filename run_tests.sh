@@ -14,10 +14,10 @@ MODULES=$(python3 $SCRIPTS_DIR/project_modules.py $PROJECT_PATH)
 for MODULE in $MODULES
 do 
     if [ $ORDER -le 1 ]; then
-        $SCRIPTS_DIR/run_developer_written_tests.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH
+        $SCRIPTS_DIR/run_developer_written_tests.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH $SCRIPTS_DIR
     elif [ $ORDER -le 3 ]; then
-        $SCRIPTS_DIR/run_evosuite_tests.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH
+        $SCRIPTS_DIR/run_evosuite_tests.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH $SCRIPTS_DIR
     elif [ $ORDER -le 5 ]; then
-        $SCRIPTS_DIR/run_evosuite-flaky.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH
+        $SCRIPTS_DIR/run_evosuite-flaky.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH $SCRIPTS_DIR
     fi
 done
