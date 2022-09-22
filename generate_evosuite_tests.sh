@@ -4,10 +4,11 @@ PROJECT_PATH=$1
 FLAKY_FILTER=$2
 SCRIPTS_DIR=$3
 
-mkdir $PROJECT_PATH/evosuite-tests
+
 # generate tests
 if [[ $FLAKY_FILTER == 0 ]] 
 then
+    mkdir $PROJECT_PATH/evosuite-tests
     java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes/ -Dctg_cores=1 -Dctg_memory=1000 -Dctg_bests_folder=evosuite-tests -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=2
 
     testDEPENDENCIES=$(find $SCRIPTS_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
@@ -46,7 +47,8 @@ then
         exit 1; 
     fi
 else
-    java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes -Dtest_scaffolding=false -Dno_runtime_dependency=true -Djunit_check=false -Dsandbox=false -Dvirtual_fs=false -Dvirtual_net=false -Dreplace_calls=false -Dreplace_system_in=false -Dreplace_gui=false -Dreset_static_fields=false -Dreset_static_field_gets=false -Dreset_static_final_fields=false -Dctg_cores=1 -Dctg_memory=1000 -Dctg_bests_folder=evosuite-flaky -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=2
+    mkdir $PROJECT_PATH/evosuite-flaky
+    java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes -Dtest_scaffolding=false -Dno_runtime_dependency=true -Djunit_check=false -Dsandbox=false -Dvirtual_fs=false -Dvirtual_net=false -Dreplace_calls=false -Dtest_dir=$PROJECT_PATH/evosuite-flaky -Dreplace_system_in=false -Dreplace_gui=false -Dreset_static_fields=false -Dreset_static_field_gets=false -Dreset_static_final_fields=false
 
     testDEPENDENCIES=$(find $SCRIPTS_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
 
@@ -58,7 +60,7 @@ else
     then 
         exit 1; 
     fi
-    
+
     TESTS=$(find $PROJECT_PATH/evosuite-flaky/ -type f  -name \*.java)
     echo "Compiling EvoSuite tests"
     for x in $TESTS; do
