@@ -19,5 +19,13 @@ testDEPENDENCIES=$(find $SCRIPTS_DIR/dependencies -type f -name \*.jar  -not -na
 export CLASSPATH=$PROJECT_PATH/target/classes:$SCRIPTS_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes:$mvnDEPENDENCIES
 
 java -DsurefirePath=$PROJECT_PATH/target/surefire-reports -DmvnLogPath=$PROJECT_PATH/mvn-test.log -DreportPath=$REPORT_PATH -DtestOrder=$ORDER -Ddependencies=$mvnDEPENDENCIES -DtestReport=$TEST_NUMBER MavenTestRunner &> /dev/null
-mv $REPORT_PATH/TEST-junit-jupiter.xml $REPORT_PATH/TEST-class-$TEST_NUMBER.xml &> /dev/null
-mv $REPORT_PATH/TEST-junit-vintage.xml $REPORT_PATH/TEST-class-vintage-$TEST_NUMBER.xml &> /dev/null
+
+[[ $ORDER = 0 ]] && extension="classes" || extension="classes-shuffle"
+
+mv $REPORT_PATH/TEST-junit-jupiter.xml $REPORT_PATH/TEST-classes-$extension-$TEST_NUMBER.xml &> /dev/null
+mv $REPORT_PATH/TEST-junit-vintage.xml $REPORT_PATH/TEST-classes-vintage-$extension-$TEST_NUMBER.xml &> /dev/null
+
+reportFound=$(find $REPORT_PATH -type f -name \*$extension-$TEST_NUMBER.xml | wc -l)
+if [ $reportFound == 0 ]; then
+    exit 1
+fi
