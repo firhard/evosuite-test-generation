@@ -15,7 +15,14 @@ then
     #set classpath to run developer-written test
     export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-tests/:$SCRIPTS_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
-    TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f  -name \*.java)
+    TESTS_SIZE=$(find $PROJECT_PATH/evosuite-tests/ -type f -name \*.java | wc -l)
+    if [[ $TESTS_SIZE == 0 ]]
+    then 
+        exit 1; 
+    fi
+
+    TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f -name \*.java)
+    
     echo "Compiling EvoSuite tests"
     for x in $TESTS; do
         JAVA_RESPONSE="$(javac $x 2>&1)";
@@ -33,7 +40,7 @@ then
     done
     echo "EvoSuite Tests Compiled"
 
-    EVOSUITE_TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f 2> /dev/null | wc -l)
+    EVOSUITE_TESTS=$(find $PROJECT_PATH/evosuite-tests/ -type f -name \*.class 2> /dev/null | wc -l)
     if [[ $EVOSUITE_TESTS == 0 ]]
     then 
         exit 1; 
@@ -46,6 +53,12 @@ else
     #set classpath to run developer-written test
     export CLASSPATH=$PROJECT_PATH/target/classes:$PROJECT_PATH/evosuite-flaky/:$SCRIPTS_DIR/test:$testDEPENDENCIES:$PROJECT_PATH/target/test-classes
 
+    TESTS_SIZE=$(find $PROJECT_PATH/evosuite-flaky/ -type f -name \*.java | wc -l)
+    if [[ $TESTS_SIZE == 0 ]]
+    then 
+        exit 1; 
+    fi
+    
     TESTS=$(find $PROJECT_PATH/evosuite-flaky/ -type f  -name \*.java)
     echo "Compiling EvoSuite tests"
     for x in $TESTS; do
@@ -64,7 +77,7 @@ else
     done
     echo "EvoSuite Tests Compiled"
 
-    EVOSUITE_TESTS=$(find $PROJECT_PATH/evosuite-flaky -type f 2> /dev/null | wc -l)
+    EVOSUITE_TESTS=$(find $PROJECT_PATH/evosuite-flaky -type f -name \*.class 2> /dev/null | wc -l)
     if [[ $EVOSUITE_TESTS == 0 ]]
     then 
         exit 1; 
