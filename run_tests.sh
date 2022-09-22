@@ -21,6 +21,6 @@ do
     elif [ $ORDER -le 3 ]; then
         $SCRIPTS_DIR/run_evosuite_tests.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH $SCRIPTS_DIR
     elif [ $ORDER -le 5 ]; then
-        $SCRIPTS_DIR/run_evosuite-flaky.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH $SCRIPTS_DIR
+        $SCRIPTS_DIR/run_evosuite_flaky_tests.sh $MODULE $ORDER_MOD $TEST_NUMBER $REPORT_PATH $SCRIPTS_DIR
     fi
 done
