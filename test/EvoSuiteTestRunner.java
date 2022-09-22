@@ -53,11 +53,9 @@ public class EvoSuiteTestRunner {
             @Override
             public void testRunStarted(Description description) throws Exception {
                 if (testOrder.equals("1"))
-                    formatter.setOutput(new FileOutputStream(new File(reportPath, "TEST-" + description.getDisplayName()
-                            + "-shuffle-evosuite-" + testReport + ".xml")));
+                    formatter.setOutput(new FileOutputStream(new File(reportPath + ".xml")));
                 else
-                    formatter.setOutput(new FileOutputStream(new File(reportPath, "TEST-" + description.getDisplayName()
-                            + "-evosuite-" + testReport + ".xml")));
+                    formatter.setOutput(new FileOutputStream(new File(reportPath + ".xml")));
                 super.testRunStarted(description);
             }
         });

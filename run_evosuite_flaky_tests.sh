@@ -25,3 +25,8 @@ tclass=${tclass//.class/}
 tclass=${tclass//\//.}
 
 java -Dclasses=${tclass} -Dorder=$ORDER -DreportPath=$REPORT_PATH -DtestReport=$TEST_NUMBER EvoSuiteTestRunner &> /dev/null
+
+reportFound=$(find $REPORT_PATH.xml | wc -l)
+if [ $reportFound == 0 ]; then
+    exit 1
+fi

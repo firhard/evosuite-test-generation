@@ -43,6 +43,7 @@ public class MavenTestRunner {
     private final String reportPath;
     private final String dependencies;
     private final String testReport;
+    private final String projectPath;
     String className;
 
     public static void main(final String[] args) {
@@ -53,7 +54,8 @@ public class MavenTestRunner {
             String testOrder = System.getProperty("testOrder");
             String dependencies = System.getProperty("dependencies");
             String testReport = System.getProperty("testReport");
-            new MavenTestRunner(mvnLogPath, surefirePath, reportPath, testOrder, dependencies, testReport).run();
+            String projectPath = System.getProperty("projectPath");
+            new MavenTestRunner(mvnLogPath, surefirePath, reportPath, testOrder, dependencies, testReport, projectPath).run();
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,7 +73,6 @@ public class MavenTestRunner {
         for (String clazz : classOrder) {
             classes.add(Class.forName(clazz));
         }
-
         if (dependencies.contains("junit-jupiter") || dependencies.contains("junit-jupiter-api")){
             List<MethodSelector> mSelectors = new ArrayList<>();
             for (String clazz : classOrder) {
@@ -91,7 +92,7 @@ public class MavenTestRunner {
             // System.out.println(mSelectors);
             PrintWriter out = new PrintWriter(new StringWriter());
             LegacyXmlReportGeneratingListener listener = new LegacyXmlReportGeneratingListener(
-                    Paths.get(reportPath),out);
+                    Paths.get(projectPath),out);
             LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
                     .selectors(mSelectors)
                     .build();
@@ -102,7 +103,6 @@ public class MavenTestRunner {
             System.exit(0);
         } else {
             JUnitCore junit = new JUnitCore();
-
             if (testOrder.equals("1")) {
                 Collections.shuffle(classes);
             }
@@ -112,13 +112,10 @@ public class MavenTestRunner {
                 public void testRunStarted(Description description) throws Exception {
                     if (testOrder.equals("1"))
                         formatter.setOutput(new FileOutputStream(new File(
-                                reportPath,
-                                "TEST-" + description.getDisplayName() + "-shuffle-" + testReport
-                                        + ".xml")));
+                                reportPath + ".xml")));
                     else
                         formatter.setOutput(new FileOutputStream(new File(
-                                reportPath,
-                                "TEST-" + description.getDisplayName() + "-" + testReport + ".xml")));
+                                reportPath + ".xml")));
                     super.testRunStarted(description);
                 }
             });
@@ -138,13 +135,14 @@ public class MavenTestRunner {
 
     }
 
-    private MavenTestRunner(String mvnLogPath, String surefirePath, String reportPath, String testOrder, String dependencies, String testReport) {
+    private MavenTestRunner(String mvnLogPath, String surefirePath, String reportPath, String testOrder, String dependencies, String testReport, String projectPath) {
         this.mvnTestLog = Paths.get(mvnLogPath);
         this.sureFireDirectory = Paths.get(surefirePath);
         this.reportPath = reportPath;
         this.testOrder = testOrder;
         this.dependencies = dependencies;
         this.testReport = testReport;
+        this.projectPath = projectPath;
     }
 
     private List<String> parseXML(File xmlFile) throws IOException, SAXException, ParserConfigurationException {

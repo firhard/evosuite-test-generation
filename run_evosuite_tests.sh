@@ -26,8 +26,7 @@ tclass=${tclass//\//.}
 
 java -Dclasses=${tclass} -Dorder=$ORDER -DreportPath=$REPORT_PATH -DtestReport=$TEST_NUMBER EvoSuiteTestRunner &> /dev/null
 
-[[ $ORDER = 0 ]] && extension="classes" || extension="classes-shuffle"
-reportFound=$(find $REPORT_PATH -type f -name \*$extension-$TEST_NUMBER.xml | wc -l)
+reportFound=$(find $REPORT_PATH.xml | wc -l)
 if [ $reportFound == 0 ]; then
     exit 1
 fi
