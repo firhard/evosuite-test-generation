@@ -14,6 +14,7 @@ RESULT_DIR="/results"
 PROJECT_URL=$1
 PROJECT_HASH=$2
 REPOSITORY_DIR=$3
+SCRIPTS_DIR=$4
 PROJECT_NAME=$(echo $PROJECT_URL | sed -e 's/.*\///g')
 
 # -- DEBUG OUTPUT
@@ -51,16 +52,11 @@ if grep "BUILD FAILURE" $(pwd)/mvn-compile.log; then
 fi
 
 mvn dependency:copy-dependencies -l mvn-dependencies.log
-
-# JUnit 3 cannot be shuffled
+# exit on JUnit3 as tests cannot be shuffled
 if grep "junit-3" $(pwd)/mvn-dependencies.log; then 
     exit 1
 fi
 
 mvn test -l mvn-test.log -Drat.skip=true -DfailIfNoTests=true -Dmaven.test.failure.ignore
-# No tests were executed
-if grep "Tests run: 0, Failures: 0, Errors: 0, Skipped: 0" $(pwd)/mvn-test.log | grep -v "Time elapsed:" | tail -1; then
-    exit 1
-fi
-RESULT=$(grep "Tests run:" $(pwd)/mvn-test.log | grep -v "Time elapsed:" | tail -1;)
+RESULT=$(grep "Tests run:" $(pwd)/mvn-test.log | grep -v "Time elapsed:")
 python3.9 $SCRIPTS_DIR/mvnTestResult.py "${RESULT}"

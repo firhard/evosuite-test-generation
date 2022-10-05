@@ -2,11 +2,21 @@ import sys
 import re
 
 result = sys.argv[1]
-result = re.sub('.*Tests run','Tests run', result)
-resultDict = dict(x.split(":") for x in result.split(", "))
+results = result.split("\n")
+results = [re.sub('.*Tests run','Tests run', i) for i in results]
 
-for key in resultDict:
-    resultDict[key] = int(resultDict[key])
+resultDictList = []
+for rslt in results:
+    resultDictList.append(dict(x.split(":") for x in rslt.split(", ")))
+
+for sub in resultDictList:
+    for key in sub:
+        sub[key] = int(sub[key])
+
+resultDict = {}
+for d in resultDictList:
+    for k in d.keys():
+        resultDict[k] = resultDict.get(k, 0) + d[k]
 
 numTests = resultDict["Tests run"]
 
@@ -19,5 +29,5 @@ for key in resultDict:
 
 if numNonPassTests >= numTests: exit(1)
 
-# I'm not sure if we're going to add this or not as tests with error will stop other tests
+# I'm not sure if we're going to add this or not as tests with error will stop other tests (hence exit '1' status)
 if resultDict["Errors"] > 0: exit(1)
