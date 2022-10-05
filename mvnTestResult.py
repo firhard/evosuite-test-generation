@@ -20,4 +20,4 @@ for key in resultDict:
 if numNonPassTests >= numTests: exit(1)
 
 # I'm not sure if we're going to add this or not as tests with error will stop other tests
-if resultDict["Errors"] > 0: exit(1)
+# if resultDict["Errors"] > 0: exit(1)
