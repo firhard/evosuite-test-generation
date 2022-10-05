@@ -29,5 +29,5 @@ for key in resultDict:
 
 if numNonPassTests >= numTests: exit(1)
 
-# I'm not sure if we're going to add this or not as tests with error will stop other tests (hence exit '1' status)
+# Tests with error will stop other tests when running 'mvn test' (hence exit '1' status)
 if resultDict["Errors"] > 0: exit(1)
