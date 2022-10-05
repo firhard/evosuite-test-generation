@@ -44,18 +44,23 @@ else
 fi
 
 cd "${REPOSITORY_DIR}"
+
 mvn compile -l mvn-compile.log -Drat.skip=true
 if grep "BUILD FAILURE" $(pwd)/mvn-compile.log; then 
-    exit 1 
+    exit 1
 fi
-mvn dependency:copy-dependencies
 
-mvn test -l mvn-test.log -Drat.skip=true
-# add check how many test fails
-# TEST_FAILURE=$(grep "Tests run:" $(pwd)/mvn-test.log)
+mvn dependency:copy-dependencies -l mvn-dependencies.log
 
-#0 for with flaky tests fiter
-# bash $CWD/project_modules.sh ${REPOSITORY_DIR} 0
+# JUnit 3 cannot be shuffled
+if grep "junit-3" $(pwd)/mvn-dependencies.log; then 
+    exit 1
+fi
 
-#1 without flaky tests filter
-# bash $CWD/project_modules.sh ${REPOSITORY_DIR} 1 
+mvn test -l mvn-test.log -Drat.skip=true -DfailIfNoTests=true -Dmaven.test.failure.ignore
+# No tests were executed
+if grep "Tests run: 0, Failures: 0, Errors: 0, Skipped: 0" $(pwd)/mvn-test.log | grep -v "Time elapsed:" | tail -1; then
+    exit 1
+fi
+RESULT=$(grep "Tests run:" $(pwd)/mvn-test.log | grep -v "Time elapsed:" | tail -1;)
+python3.9 $SCRIPTS_DIR/mvnTestResult.py "${RESULT}"
