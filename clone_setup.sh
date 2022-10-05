@@ -57,6 +57,6 @@ if grep "junit-3" $(pwd)/mvn-dependencies.log; then
     exit 1
 fi
 
-mvn test -l mvn-test.log -Drat.skip=true -DfailIfNoTests=true -Dmaven.test.failure.ignore
+mvn test -l mvn-test.log -Drat.skip=true -Dmaven.test.failure.ignore
 RESULT=$(grep "Tests run:" $(pwd)/mvn-test.log | grep -v "Time elapsed:")
 python3.9 $SCRIPTS_DIR/mvnTestResult.py "${RESULT}"
