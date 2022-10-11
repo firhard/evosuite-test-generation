@@ -47,16 +47,25 @@ fi
 cd "${REPOSITORY_DIR}"
 
 mvn compile -l mvn-compile.log -Drat.skip=true
-if grep "BUILD FAILURE" $(pwd)/mvn-compile.log; then 
+if grep "BUILD FAILURE" $(pwd)/mvn-compile.log; then
+    echo "Build failure"
     exit 1
 fi
 
 mvn dependency:copy-dependencies -l mvn-dependencies.log
 # exit on JUnit3 as tests cannot be shuffled
-if grep "junit-3" $(pwd)/mvn-dependencies.log; then 
+if grep "junit-3" $(pwd)/mvn-dependencies.log; then
+    echo "JUnit 3 will not be included in this experiment (couldn't be shuffled)"
     exit 1
 fi
 
 mvn test -l mvn-test.log -Drat.skip=true -Dmaven.test.failure.ignore
 RESULT=$(grep "Tests run:" $(pwd)/mvn-test.log | grep -v "Time elapsed:")
-python3.9 $SCRIPTS_DIR/mvnTestResult.py "${RESULT}"
+
+if  grep "Tests run:" $(pwd)/mvn-test.log | grep -v "Time elapsed:";
+then
+    python3.9 $SCRIPTS_DIR/mvnTestResult.py "${RESULT}"
+else
+    echo "No tests could be found"
+    exit 1
+fi
