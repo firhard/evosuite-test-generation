@@ -106,7 +106,6 @@ public class MavenTestRunner {
             if (testOrder.equals("1")) {
                 Collections.shuffle(classes);
             }
-            System.out.println(testReport);
             junit.addListener(new MavenJUnitResultFormatterAsRunListener(this, new MavenXMLFormatter(this)) {
                 @Override
                 public void testRunStarted(Description description) throws Exception {
