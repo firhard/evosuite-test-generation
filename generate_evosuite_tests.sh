@@ -9,7 +9,7 @@ SCRIPTS_DIR=$3
 if [[ $FLAKY_FILTER == 0 ]] 
 then
     mkdir $PROJECT_PATH/evosuite-tests
-    java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes/ -Dctg_cores=1 -Dctg_memory=1000 -Dctg_bests_folder=evosuite-tests -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=2
+    java -cp $MY_PATH/dependencies/evosuite-1.2.0.jar org.evosuite.EvoSuite -target $PROJECT_PATH/target/classes/ -Dctg_cores=1 -Dctg_memory=2000 -Dctg_bests_folder=evosuite-tests -Dctg_dir=$PROJECT_PATH -continuous EXECUTE -Dctg_time_per_class=2
 
     testDEPENDENCIES=$(find $SCRIPTS_DIR/dependencies -type f -name \*.jar | tr '\n' ':')
 
