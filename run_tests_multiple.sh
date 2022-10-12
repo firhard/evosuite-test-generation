@@ -10,9 +10,9 @@ SCRIPTS_DIR=$8
 
 for i in {0..9}; 
 do 
-    status=$DOCKER_RUN $SCRIPT_FILE $PROJECT_PATH_SOURCE $PROJECT_PATH $ORDER $TEST_NUMBER $REPORT_PATH"_${i}";
+    $DOCKER_RUN $SCRIPT_FILE $PROJECT_PATH_SOURCE $PROJECT_PATH $ORDER $TEST_NUMBER $REPORT_PATH"_${i}";
 
-    if [ $status != 0 ]; then
+    if [ $? != 0 ]; then
         exit 1
     fi
 done
