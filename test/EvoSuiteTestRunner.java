@@ -52,10 +52,7 @@ public class EvoSuiteTestRunner {
         junit.addListener(new EvoSuiteJUnitResultFormatterAsRunListener(this, new EvoSuiteXMLFormatter(this)) {
             @Override
             public void testRunStarted(Description description) throws Exception {
-                if (testOrder.equals("1"))
-                    formatter.setOutput(new FileOutputStream(new File(reportPath + ".xml")));
-                else
-                    formatter.setOutput(new FileOutputStream(new File(reportPath + ".xml")));
+                formatter.setOutput(new FileOutputStream(new File(reportPath + ".xml")));
                 super.testRunStarted(description);
             }
         });
